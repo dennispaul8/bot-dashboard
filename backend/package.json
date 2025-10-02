@@ -1,0 +1,76 @@
+{
+  
+  "name": "twitter-milestone-backend",
+  
+  "version": "1.0.0",
+  
+  "main": "src/index.js",
+  
+  "scripts": {
+  
+    
+  "start": "node src/index.j",
+  
+    
+  "dev": "cross-env NODE_ENV=development nodemon src/index.js"
+  
+  },
+  
+  "keywords": [],
+  
+  "author": "",
+  
+  "license": "ISC",
+  
+  "dependencies": {
+  
+    
+  "cors": "^2.8.5",
+  
+    
+  "cron": "^4.3.3",
+  
+    
+  "dotenv": "^17.2.2",
+  
+    
+  "express": "^5.1.0",
+  
+    
+  "express-session": "^1.18.2",
+  
+    
+  "multer": "^2.0.2",
+  
+    
+  "node-fetch": "^2.7.0",
+  
+    
+  "nodemon": "^3.1.10",
+  
+    
+  "passport": "^0.7.0",
+  
+    
+  "passport-twitter": "^1.0.4",
+  
+    
+  "passport-twitter-oauth2": "^2.1.1",
+  
+    
+  "pg": "^8.16.3",
+  
+    
+  "twitter-api-v2": "^1.27.0"
+  
+  },
+  
+  "description": "",
+  
+  "devDependencies": {
+  
+    
+  "cross-env": "^10.1.0"
+  
+  }
+}

@@ -1,0 +1,62 @@
+// backend/src/routes/auth.js
+const express = require("express");
+const passport = require("passport");
+const TwitterStrategy = require("passport-twitter").Strategy;
+const { createOrUpdateUser, getUserByTwitterId } = require("../models/User");
+
+const router = express.Router();
+
+passport.serializeUser((user, cb) => cb(null, user.id));
+passport.deserializeUser((id, cb) => cb(null, { id }));
+
+passport.use(
+  new TwitterStrategy(
+    {
+      consumerKey: process.env.API_KEY,
+      consumerSecret: process.env.API_SECRET,
+      callbackURL: process.env.TWITTER_CALLBACK_URL,
+    },
+    async (token, tokenSecret, profile, done) => {
+      try {
+        const existing = getUserByTwitterId(profile.id);
+        const id = existing ? existing.id : `${profile.username || profile.id}`;
+
+        const saved = createOrUpdateUser(id, {
+          twitterId: profile.id,
+          username: profile.username,
+          displayName: profile.displayName,
+          accessToken: token,
+          accessSecret: tokenSecret,
+          message: "🎉 Thank you for your support!",
+          gifPath: "",
+          lastMilestone: 0,
+        });
+
+        return done(null, saved);
+      } catch (err) {
+        console.error("OAuth1 callback error:", err);
+        return done(err);
+      }
+    }
+  )
+);
+
+router.get("/twitter", passport.authenticate("twitter"));
+
+router.get(
+  "/twitter/callback",
+  passport.authenticate("twitter", { failureRedirect: "/auth/failure" }),
+  (req, res) => {
+    const userId =
+      req.user && req.user.id
+        ? req.user.id
+        : (req.user && req.user.username) || "";
+    res.redirect(
+      `${process.env.FRONTEND_URL}/?userId=${encodeURIComponent(userId)}`
+    );
+  }
+);
+
+router.get("/failure", (req, res) => res.status(401).send("Auth failed"));
+
+module.exports = router;
