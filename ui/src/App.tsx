@@ -21,7 +21,6 @@ export default function App() {
   const [userId, setUserId] = useState<string | null>(null);
   const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
   const [logs, setLogs] = useState<string[]>([]);
-  const API_BASE = "https://bot-dashboard-5q84.onrender.com";
 
   // Settings state
   // Settings state
