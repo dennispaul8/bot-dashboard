@@ -12,7 +12,7 @@ passport.deserializeUser((id, cb) => cb(null, { id }));
 console.log("🔑 Using Twitter credentials:", {
   API_KEY: process.env.API_KEY,
   API_SECRET: process.env.API_SECRET,
-  CALLBACK: [process.env.TWITTER_CALLBACK_UR],
+  CALLBACK: process.env.TWITTER_CALLBACK_URL,
 });
 
 passport.use(
@@ -20,7 +20,7 @@ passport.use(
     {
       consumerKey: process.env.API_KEY,
       consumerSecret: process.env.API_SECRET,
-      callbackURL: [process.env.TWITTER_CALLBACK_URL],
+      callbackURL: process.env.TWITTER_CALLBACK_URL,
     },
     async (token, tokenSecret, profile, done) => {
       try {
