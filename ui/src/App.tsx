@@ -21,6 +21,7 @@ export default function App() {
   const [userId, setUserId] = useState<string | null>(null);
   const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
   const [logs, setLogs] = useState<string[]>([]);
+  const API_BASE = "https://bot-dashboard-5q84.onrender.com";
 
   // Settings state
   // Settings state
@@ -40,7 +41,7 @@ export default function App() {
   useEffect(() => {
     if (!userId) return;
 
-    const socket = io("http://localhost:5000", {
+    const socket = io("https://bot-dashboard-5q84.onrender.com", {
       transports: ["websocket"],
     });
 
@@ -95,7 +96,7 @@ export default function App() {
     const id = params.get("userId");
     if (id) {
       setUserId(id);
-      fetch(`http://localhost:5000/api/user/${id}`)
+      fetch(`https://bot-dashboard-5q84.onrender.com/api/user/${id}`)
         .then((res) => res.json())
         .then((data) => {
           setUsername(data.username);
@@ -109,7 +110,8 @@ export default function App() {
   }, []);
 
   const connectTwitter = () => {
-    window.location.href = "http://localhost:5000/auth/twitter";
+    window.location.href =
+      "https://bot-dashboard-5q84.onrender.com/auth/twitter";
   };
 
   const runBot = async () => {
@@ -124,10 +126,13 @@ export default function App() {
     }
 
     try {
-      const res = await fetch(`http://localhost:5000/api/bot/check/${userId}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      });
+      const res = await fetch(
+        `https://bot-dashboard-5q84.onrender.com/api/bot/check/${userId}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        }
+      );
 
       const data = await res.json();
 
@@ -172,7 +177,7 @@ export default function App() {
 
     try {
       const res = await fetch(
-        `http://localhost:5000/api/milestone/${userId}/gif`,
+        `https://bot-dashboard-5q84.onrender.com/api/milestone/${userId}/gif`,
         {
           method: "POST",
           body: formData,
