@@ -17,6 +17,9 @@ const app = express();
 
 // Middleware
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// ✅ CORS: allow cookies (for Twitter OAuth redirect)
 app.use(
   cors({
     origin: [process.env.FRONTEND_URL, "http://localhost:5173"],
@@ -24,33 +27,38 @@ app.use(
   })
 );
 
-// Session (required for passport)
+// ✅ Session (required for Passport OAuth1)
 app.use(
   session({
     secret: process.env.SESSION_SECRET || "supersecret",
     resave: false,
     saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === "production", // ✅ HTTPS only on Render
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // ✅ allows cross-site cookies
+    },
   })
 );
 
+// ✅ Passport
 app.use(passport.initialize());
 app.use(passport.session());
 
 // ✅ Routes
-app.use("/auth", authRoutes); // Twitter auth
+app.use("/auth", authRoutes);
 app.use("/api/bot", botRoutes);
 app.use("/api/milestone", milestoneRoutes);
 app.use("/api/user", userRoutes);
 
-// Serve uploaded files
+// ✅ Serve uploads (for GIFs)
 app.use("/uploads", express.static(path.join(__dirname, "..", "uploads")));
 
-// Health check
-app.get("/", (req, res) =>
-  res.send("✅ Twitter Milestone Bot Backend running")
-);
+// ✅ Health check
+app.get("/", (req, res) => {
+  res.send("✅ Twitter Milestone Bot Backend running");
+});
 
-// Optional: start cron jobs
+// ✅ Optional cron
 if (process.env.ENABLE_CRON === "true") {
   const cronExpr = process.env.CRON_EXPRESSION || "0 * * * *";
   startAllCron(cronExpr);
