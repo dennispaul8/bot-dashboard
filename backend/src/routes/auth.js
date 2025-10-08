@@ -21,6 +21,9 @@ passport.use(
       consumerKey: process.env.API_KEY,
       consumerSecret: process.env.API_SECRET,
       callbackURL: process.env.TWITTER_CALLBACK_URL,
+      requestTokenURL: "https://api.x.com/oauth/request_token",
+      accessTokenURL: "https://api.x.com/oauth/access_token",
+      userAuthorizationURL: "https://api.x.com/oauth/authenticate",
     },
     async (token, tokenSecret, profile, done) => {
       try {
