@@ -11,6 +11,7 @@ import {
   BarChart,
   Bar,
 } from "recharts";
+import { io } from "socket.io-client";
 
 export default function App() {
   const [activeTab, setActiveTab] = useState("overview");
@@ -19,10 +20,7 @@ export default function App() {
   const [username, setUsername] = useState("");
   const [userId, setUserId] = useState<string | null>(null);
   const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
-  const [logs, setLogs] = useState([
-    "✅ Bot started at 2025-10-01 11:30 UTC",
-    "🎉 Milestone 1200 followers reached",
-  ]);
+  const [logs, setLogs] = useState<string[]>([]);
 
   // Settings state
   // Settings state
@@ -32,20 +30,65 @@ export default function App() {
   const [gifFile, setGifFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
 
-  // Example follower growth data (replace with API/db data later)
-  const followerData = [
-    { date: "Sep 20", followers: 800 },
-    { date: "Sep 23", followers: 950 },
-    { date: "Sep 26", followers: 1100 },
-    { date: "Sep 29", followers: 1200 },
-    { date: "Oct 1", followers: 1250 },
-  ];
+  const [followerData, setFollowerData] = useState<
+    { date: string; followers: number }[]
+  >([]);
+  const [milestoneData, setMilestoneData] = useState<
+    { milestone: string; count: number }[]
+  >([]);
 
-  const milestoneData = [
-    { milestone: "500", count: 1 },
-    { milestone: "1000", count: 1 },
-    { milestone: "1200", count: 1 },
-  ];
+  useEffect(() => {
+    if (!userId) return;
+
+    const socket = io("http://localhost:5000", {
+      transports: ["websocket"],
+    });
+
+    socket.on("connect", () => {
+      console.log("Connected to socket:", socket.id);
+    });
+
+    // Listen for new log entries
+    socket.on(`log-update-${userId}`, (newLog: string) => {
+      setLogs((prev) => [newLog, ...prev]);
+    });
+
+    // Listen for live follower updates
+    socket.on(`follower-update-${userId}`, (newCount: number) => {
+      console.log(`📈 Received follower update: ${newCount}`);
+      setFollowers(newCount);
+    });
+
+    socket.on("disconnect", () => {
+      console.log("Socket disconnected");
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [userId]);
+
+  // Generate mock analytics when followers are fetched
+  useEffect(() => {
+    if (followers) {
+      const mockHistory = [
+        { date: "Sep 20", followers: Math.floor(followers * 0.7) },
+        { date: "Sep 23", followers: Math.floor(followers * 0.8) },
+        { date: "Sep 26", followers: Math.floor(followers * 0.9) },
+        { date: "Sep 29", followers: Math.floor(followers * 0.95) },
+        { date: "Oct 4", followers },
+        { date: "Oct 5", followers },
+      ];
+      setFollowerData(mockHistory);
+
+      // Auto-generate milestones (every 500)
+      const milestones = [];
+      for (let m = 500; m <= followers; m += 500) {
+        milestones.push({ milestone: m.toString(), count: 1 });
+      }
+      setMilestoneData(milestones);
+    }
+  }, [followers]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -71,9 +114,48 @@ export default function App() {
 
   const runBot = async () => {
     setLogs((prev) => [`🚀 Bot run at ${new Date().toISOString()}`, ...prev]);
-    // You’d call POST /api/check/:userId here
-  };
 
+    if (!userId) {
+      setLogs((prev) => [
+        `❌ No user ID found — please reconnect Twitter`,
+        ...prev,
+      ]);
+      return;
+    }
+
+    try {
+      const res = await fetch(`http://localhost:5000/api/bot/check/${userId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setLogs((prev) => [
+          `⚠️ Error running bot: ${data.error || "Unknown error"}`,
+          ...prev,
+        ]);
+        return;
+      }
+
+      setLogs((prev) => [
+        `✅ Bot check complete — Followers: ${data.followers}, Milestone: ${data.milestone}`,
+        ...prev,
+      ]);
+
+      // Optionally update UI values
+      if (data.followers) setFollowers(data.followers);
+      if (data.milestone) setMilestone(data.milestone);
+    } catch (err) {
+      console.error("Run bot error:", err);
+      setLogs((prev) => [`❌ Failed to connect to backend`, ...prev]);
+    }
+  };
+  const handleRunBot = async () => {
+    await runBot();
+    // await fetchLogs();
+  };
   const saveMessage = async () => {
     setLogs((prev) => [
       `💬 Custom message updated: "${customMessage}"`,
@@ -83,9 +165,31 @@ export default function App() {
   };
 
   const uploadGif = async () => {
-    if (!gifFile) return;
-    setLogs((prev) => [`📤 Uploaded GIF: ${gifFile.name}`, ...prev]);
-    // POST to /api/config/:userId/gif with FormData
+    if (!gifFile || !userId) return;
+
+    const formData = new FormData();
+    formData.append("gif", gifFile);
+
+    try {
+      const res = await fetch(
+        `http://localhost:5000/api/milestone/${userId}/gif`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.error || "Upload failed");
+
+      setLogs((prev) => [`✅ GIF uploaded: ${data.path}`, ...prev]);
+      console.log("GIF upload success:", data);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error("Upload error:", message);
+      setLogs((prev) => [`❌ GIF upload failed: ${message}`, ...prev]);
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -183,7 +287,7 @@ export default function App() {
         <div className="flex justify-between items-center mb-8">
           <h2 className="text-xl font-semibold capitalize">{activeTab}</h2>
           <button
-            onClick={runBot}
+            onClick={handleRunBot}
             className="bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-lg"
           >
             Run Bot
@@ -207,10 +311,14 @@ export default function App() {
 
             <div className="md:col-span-2">
               <h2 className="text-lg font-semibold mb-3">Activity Log</h2>
-              <div className="bg-black/40 rounded-lg p-4 text-sm h-60 overflow-y-auto space-y-2">
-                {logs.map((log, i) => (
-                  <p key={i}>{log}</p>
-                ))}
+              <div className="bg-black/40 rounded-lg p-4 text-sm h-60 overflow-y-auto space-y-2 flex flex-col">
+                {logs.length === 0 ? (
+                  <p className="text-slate-400 text-center mt-20">
+                    No activity log yet
+                  </p>
+                ) : (
+                  logs.map((log, i) => <p key={i}>{log}</p>)
+                )}
               </div>
             </div>
           </div>
