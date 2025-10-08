@@ -9,12 +9,10 @@ const { addLog } = require("../models/Logs");
 
 const router = express.Router();
 
-// ✅ Initialize Twitter client
-const twitterClient = new TwitterApi({
+// ✅ App-level Twitter client (for fallback/non-user tasks)
+const appClient = new TwitterApi({
   appKey: process.env.API_KEY,
   appSecret: process.env.API_SECRET,
-  accessToken: user.accessToken,
-  accessSecret: user.accessSecret,
 });
 
 // ✅ POST: update custom message
@@ -31,13 +29,9 @@ router.post("/:userId/message", (req, res) => {
 router.post("/:userId/gif", upload.single("gif"), (req, res) => {
   if (!req.file) return res.status(400).json({ error: "No file uploaded" });
 
-  // Save full local file path for backend use
   const fullPath = path.resolve(req.file.path);
-
-  // Public URL (frontend can use this for preview)
   const publicPath = `/uploads/${req.file.filename}`;
 
-  // Store both in DB
   const user = createOrUpdateUser(req.params.userId, {
     gifPath: fullPath,
     gifUrl: publicPath,
@@ -56,36 +50,45 @@ router.get("/:userId", (req, res) => {
     username: user.username,
     displayName: user.displayName,
     message: user.message || "",
-    gifPath: user.gifUrl || "", // frontend can still show this
+    gifPath: user.gifUrl || "",
     lastMilestone: user.lastMilestone || 0,
   });
 });
 
 // 🧠 Helper: upload a local GIF file to Twitter
-async function uploadGif(localPath) {
+async function uploadGif(user, localPath) {
   const absPath = path.resolve(localPath);
-
-  if (!fs.existsSync(absPath)) {
+  if (!fs.existsSync(absPath))
     throw new Error(`GIF file not found at ${absPath}`);
-  }
 
-  // Upload GIF to Twitter
-  const mediaId = await twitterClient.v1.uploadMedia(absPath, {
-    mimeType: "image/gif",
+  // Create a per-user client
+  const userClient = new TwitterApi({
+    appKey: process.env.API_KEY,
+    appSecret: process.env.API_SECRET,
+    accessToken: user.accessToken,
+    accessSecret: user.accessSecret,
   });
 
-  return mediaId;
+  return await userClient.v1.uploadMedia(absPath, { mimeType: "image/gif" });
 }
 
-// 🚀 Function: post milestone tweet
+// 🚀 Post milestone tweet (per user)
 async function postMilestoneTweet(user, milestone) {
   try {
     const message = user.message || `🎉 Just hit ${milestone} followers!`;
     let mediaId;
 
+    // Create user-level client
+    const twitterClient = new TwitterApi({
+      appKey: process.env.API_KEY,
+      appSecret: process.env.API_SECRET,
+      accessToken: user.accessToken,
+      accessSecret: user.accessSecret,
+    });
+
     if (user.gifPath) {
       addLog(user.id, "Uploading GIF to Twitter...");
-      mediaId = await uploadGif(user.gifPath);
+      mediaId = await uploadGif(user, user.gifPath);
     }
 
     const tweet = await twitterClient.v2.tweet({
@@ -95,7 +98,6 @@ async function postMilestoneTweet(user, milestone) {
 
     addLog(user.id, `✅ Tweet posted for ${milestone} followers`);
     console.log(`✅ Tweet sent for ${user.username}:`, tweet.data.id);
-
     return tweet.data.id;
   } catch (err) {
     console.error("❌ Failed to post tweet:", err);
