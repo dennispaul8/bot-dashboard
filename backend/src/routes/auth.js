@@ -9,6 +9,12 @@ const router = express.Router();
 passport.serializeUser((user, cb) => cb(null, user.id));
 passport.deserializeUser((id, cb) => cb(null, { id }));
 
+console.log("🔑 Using Twitter credentials:", {
+  API_KEY: process.env.API_KEY,
+  API_SECRET: process.env.API_SECRET,
+  CALLBACK: process.env.TWITTER_CALLBACK_URL,
+});
+
 passport.use(
   new TwitterStrategy(
     {

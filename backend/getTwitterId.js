@@ -1,4 +1,3 @@
-// backend/getTwitterId.js
 const fetch = require("node-fetch");
 require("dotenv").config(); // so it loads .env
 

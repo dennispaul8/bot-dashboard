@@ -3,11 +3,22 @@
     "twitterId": "1326494870450614272",
     "username": "dennis_iCode",
     "displayName": "dennis🔸️",
-    "accessToken": "1326494870450614272-rxkfAZqGKwHpVjB4wXdl5XmtUwT3nV",
-    "accessSecret": "VU2SZxMSmU6Juf25ucFCnXh0pxOJTboSgor5RTTqTPzc6",
+    "accessToken": "1326494870450614272-oX3DP8pslIzaif1lElGZxgMF0yJD2z",
+    "accessSecret": "rtnuvucP0ohRkxgsRS1b5wyEUu4FPfSIh4Mvr6dXOs8mj",
     "message": "🎉 Thank you for your support!",
-    "gifPath": "",
-    "lastMilestone": 0,
-    "id": "dennis_iCode"
+    "gifPath": "C:\\Users\\oluwa\\Documents\\bot-dashboard\\backend\\uploads\\dennis_iCode-1759889774626-celebration.gif",
+    "lastMilestone": 100,
+    "id": "dennis_iCode",
+    "name": "dennis🔸️",
+    "followers": 99,
+    "following": 105,
+    "profile_image_url": "https://pbs.twimg.com/profile_images/1963672496764325888/rg-6O-qx_normal.jpg",
+    "lastFetched": 1759879394497,
+    "gifUrl": "/uploads/dennis_iCode-1759889774626-celebration.gif"
+  },
+  "some_other_user": {
+    "id": "some_other_user",
+    "username": "some_other_user",
+    "displayName": "some_other_user"
   }
 }
