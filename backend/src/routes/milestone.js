@@ -13,8 +13,8 @@ const router = express.Router();
 const twitterClient = new TwitterApi({
   appKey: process.env.API_KEY,
   appSecret: process.env.API_SECRET,
-  accessToken: process.env.ACCESS_TOKEN,
-  accessSecret: process.env.ACCESS_SECRET,
+  accessToken: user.accessToken,
+  accessSecret: user.accessSecret,
 });
 
 // ✅ POST: update custom message
