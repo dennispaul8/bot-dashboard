@@ -34,8 +34,8 @@ app.use(
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: process.env.NODE_ENV === "production", // ✅ HTTPS only on Render
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // ✅ allows cross-site cookies
+      secure: false,
+      sameSite: "lax",
     },
   })
 );
