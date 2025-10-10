@@ -1,5 +1,13 @@
 import { useEffect, useState } from "react";
-import { Home, BarChart2, Settings, LogOut, Upload } from "lucide-react";
+import {
+  Home,
+  BarChart2,
+  Settings,
+  LogOut,
+  Upload,
+  Menu,
+  X,
+} from "lucide-react";
 import {
   LineChart,
   Line,
@@ -15,6 +23,7 @@ import { io } from "socket.io-client";
 
 export default function App() {
   const [activeTab, setActiveTab] = useState("overview");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [followers, setFollowers] = useState<number | null>(null);
   const [milestone, setMilestone] = useState<number | null>(null);
   const [username, setUsername] = useState("");
@@ -71,15 +80,28 @@ export default function App() {
   // Generate mock analytics when followers are fetched
   useEffect(() => {
     if (followers) {
-      const mockHistory = [
-        { date: "Sep 20", followers: Math.floor(followers * 0.7) },
-        { date: "Sep 23", followers: Math.floor(followers * 0.8) },
-        { date: "Sep 26", followers: Math.floor(followers * 0.9) },
-        { date: "Sep 29", followers: Math.floor(followers * 0.95) },
-        { date: "Oct 4", followers },
-        { date: "Oct 5", followers },
-      ];
-      setFollowerData(mockHistory);
+      // Simulate last 6 weeks (7-day intervals)
+      const today = new Date();
+      const history = [];
+      let baseFollowers = followers * 0.5; // start 6 weeks ago at 50%
+
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date(today);
+        date.setDate(today.getDate() - i * 7); // every 7 days
+        const dateLabel = date.toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+        });
+
+        // smooth growth simulation
+        const followerCount = Math.round(
+          baseFollowers + (followers - baseFollowers) * (1 - i / 6)
+        );
+
+        history.push({ date: dateLabel, followers: followerCount });
+      }
+
+      setFollowerData(history);
 
       // Auto-generate milestones (every 500)
       const milestones = [];
@@ -232,10 +254,24 @@ export default function App() {
   }
 
   return (
-    <div className="flex min-h-screen bg-slate-900 text-white">
+    <div className="flex flex-col md:flex-row min-h-screen bg-slate-900 text-white">
+      {/* Mobile Header */}
+      <div className="md:hidden flex items-center justify-between p-4 bg-slate-800">
+        <h1 className="text-xl font-bold">Bot Dashboard</h1>
+        <button onClick={() => setSidebarOpen(!sidebarOpen)}>
+          {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
+      </div>
+
       {/* Sidebar */}
-      <aside className="w-64 bg-slate-800 p-6 flex flex-col">
-        <h1 className="text-2xl font-bold mb-10">Bot Dashboard</h1>
+      <aside
+        className={`fixed md:static z-20 top-0 left-0 h-full bg-slate-800 p-6 w-64 transform ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        } transition-transform duration-300 ease-in-out md:translate-x-0 flex flex-col`}
+      >
+        <h1 className="text-2xl font-bold mb-10 hidden md:block">
+          Bot Dashboard
+        </h1>
 
         {username && (
           <div className="flex items-center gap-3 mb-6">
@@ -254,30 +290,24 @@ export default function App() {
         )}
 
         <nav className="flex-1 space-y-4">
-          <button
-            onClick={() => setActiveTab("overview")}
-            className={`flex items-center gap-3 w-full text-left p-2 rounded-lg hover:bg-slate-700 ${
-              activeTab === "overview" ? "bg-slate-700" : ""
-            }`}
-          >
-            <Home size={18} /> Overview
-          </button>
-          <button
-            onClick={() => setActiveTab("analytics")}
-            className={`flex items-center gap-3 w-full text-left p-2 rounded-lg hover:bg-slate-700 ${
-              activeTab === "analytics" ? "bg-slate-700" : ""
-            }`}
-          >
-            <BarChart2 size={18} /> Analytics
-          </button>
-          <button
-            onClick={() => setActiveTab("settings")}
-            className={`flex items-center gap-3 w-full text-left p-2 rounded-lg hover:bg-slate-700 ${
-              activeTab === "settings" ? "bg-slate-700" : ""
-            }`}
-          >
-            <Settings size={18} /> Settings
-          </button>
+          {[
+            { tab: "overview", icon: Home, label: "Overview" },
+            { tab: "analytics", icon: BarChart2, label: "Analytics" },
+            { tab: "settings", icon: Settings, label: "Settings" },
+          ].map(({ tab, icon: Icon, label }) => (
+            <button
+              key={tab}
+              onClick={() => {
+                setActiveTab(tab);
+                setSidebarOpen(false);
+              }}
+              className={`flex items-center gap-3 w-full text-left p-2 rounded-lg hover:bg-slate-700 ${
+                activeTab === tab ? "bg-slate-700" : ""
+              }`}
+            >
+              <Icon size={18} /> {label}
+            </button>
+          ))}
         </nav>
 
         <button className="mt-auto flex gap-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg">
@@ -285,9 +315,16 @@ export default function App() {
         </button>
       </aside>
 
+      {/* Overlay for mobile sidebar */}
+      {sidebarOpen && (
+        <div
+          onClick={() => setSidebarOpen(false)}
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm md:hidden z-10"
+        ></div>
+      )}
+
       {/* Main content */}
-      <main className="flex-1 p-10">
-        {/* Header */}
+      <main className="flex-1 p-6 md:p-10 mt-4 md:mt-0">
         <div className="flex justify-between items-center mb-8">
           <h2 className="text-xl font-semibold capitalize">{activeTab}</h2>
           <button
