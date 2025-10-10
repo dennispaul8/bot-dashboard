@@ -56,10 +56,13 @@ router.get(
   "/twitter/callback",
   passport.authenticate("twitter", { failureRedirect: "/auth/failure" }),
   (req, res) => {
-    const userId =
-      req.user && req.user.id
-        ? req.user.id
-        : (req.user && req.user.username) || "";
+    console.log("✅ Callback success. req.user:", req.user);
+    if (!req.user) {
+      console.error("❌ No user found in session after callback");
+      return res.redirect("/auth/failure");
+    }
+
+    const userId = req.user.id || req.user.username;
     res.redirect(
       `${process.env.FRONTEND_URL}/?userId=${encodeURIComponent(userId)}`
     );
