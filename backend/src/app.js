@@ -1,6 +1,7 @@
 require("dotenv").config();
 const express = require("express");
 const session = require("express-session");
+const MongoStore = require("connect-mongo");
 const passport = require("passport");
 const path = require("path");
 const cors = require("cors");
@@ -28,14 +29,21 @@ app.use(
 );
 
 // ✅ Session (required for Passport OAuth1)
+app.set("trust proxy", 1);
+
 app.use(
   session({
-    secret: process.env.SESSION_SECRET || "supersecret",
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
+    store: MongoStore.create({
+      mongoUrl: process.env.MONGO_URI,
+      ttl: 14 * 24 * 60 * 60, // 14 days
+    }),
     cookie: {
-      secure: process.env.NODE_ENV === "production", // https only on render
-      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production", // HTTPS only in production
+      sameSite: "lax", // allow Twitter redirects
+      maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
     },
   })
 );
