@@ -18,6 +18,7 @@ import { useTheme } from "./ThemeContext";
 import { AnimatePresence, motion } from "framer-motion";
 import ThemeSelector from "./components/ThemeSelector";
 import LogoutButton from "./components/LogoutButton";
+import Toast from "./components/Toast";
 
 export default function App() {
   const [activeTab, setActiveTab] = useState("overview");
@@ -44,6 +45,20 @@ export default function App() {
   const [milestoneData, setMilestoneData] = useState<
     { milestone: string; count: number }[]
   >([]);
+
+  const [toast, setToast] = useState({
+    message: "",
+    type: "success" as "success" | "error",
+    visible: false,
+  });
+
+  const showToast = (
+    message: string,
+    type: "success" | "error" = "success"
+  ) => {
+    setToast({ message, type, visible: true });
+    setTimeout(() => setToast({ ...toast, visible: false }), 3000);
+  };
 
   useEffect(() => {
     if (!userId) return;
@@ -233,10 +248,12 @@ export default function App() {
 
       setLogs((prev) => [`✅ GIF uploaded: ${data.path}`, ...prev]);
       console.log("GIF upload success:", data);
+      showToast("GIF uploaded successfully!", "success");
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       console.error("Upload error:", message);
       setLogs((prev) => [`❌ GIF upload failed: ${message}`, ...prev]);
+      showToast("GIF upload failed!", "error");
     }
   };
 
@@ -328,6 +345,13 @@ export default function App() {
             : "bg-black text-gray-100"
         }`}
       >
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          visible={toast.visible}
+          onClose={() => setToast({ ...toast, visible: false })}
+        />
+
         <div className="flex flex-col md:flex-row min-h-screen bg-bg text-text">
           {/* Mobile Header */}
           <div className="md:hidden flex items-center justify-between p-4 bg-bg text-text">
