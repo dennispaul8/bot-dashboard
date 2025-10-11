@@ -63,11 +63,18 @@ router.get(
     }
 
     const userId = req.user.id || req.user.username;
-    res.redirect(
-      `${process.env.FRONTEND_URL}/?userId=${encodeURIComponent(userId)}`
-    );
+    FRONTEND_URL;
   }
 );
+
+router.post("/logout", (req, res) => {
+  req.logout(() => {
+    req.session.destroy(() => {
+      res.clearCookie("connect.sid");
+      res.status(200).json({ message: "Logged out" });
+    });
+  });
+});
 
 router.get("/failure", (req, res) => res.status(401).send("Auth failed"));
 
