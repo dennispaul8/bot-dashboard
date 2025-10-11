@@ -314,10 +314,24 @@ export default function App() {
     return (
       <div className="flex items-center justify-center min-h-screen bg-bg text-text">
         <div className="bg-bg text-text p-10 rounded-2xl text-center">
-          <h1 className="text-2xl font-bold mb-6">TweetBoard</h1>
+          <motion.img
+            src="/tweetboard.png"
+            alt="TweetBoard logo"
+            className="w-24 h-24 mx-auto mb-4 object-contain"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6 }}
+          />
+
+          <h1 className="text-text  text-2xl font-bold mb-6">TweetBoard</h1>
+          <p className="text-text mb-6">
+            Automate your milestone tweets and celebrate your growth
+            effortlessly
+          </p>
+
           <button
             onClick={connectTwitter}
-            className="flex items-center text-white gap-3 bg-blue-500 hover:bg-blue-600 px-6 py-3 rounded-lg font-semibold"
+            className="flex items-center justify-center text-white gap-3 bg-blue-500 hover:bg-blue-600 px-6 py-3 rounded-lg font-semibold mx-auto"
           >
             Connect with{" "}
             <span>
