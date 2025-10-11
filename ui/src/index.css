@@ -1,1 +1,34 @@
 @import "tailwindcss";
+
+/* Base (default / light) */
+:root[data-theme="default"] {
+  --bg: 255 255 255;
+  --text: 15 20 25;
+  --card: 247 249 249;
+}
+
+/* Dim theme (soft dark) */
+:root[data-theme="dim"] {
+  --bg: 21 32 43;
+  --text: 255 255 255;
+  --card: 32 45 58;
+}
+
+/* Lights Out theme (true black) */
+:root[data-theme="lightsout"] {
+  --bg: 0 0 0;
+  --text: 255 255 255;
+  --card: 22 22 22;
+}
+
+body {
+  background-color: rgb(var(--bg));
+  color: rgb(var(--text));
+}
+
+.bg-card {
+  background-color: rgb(var(--card));
+}
+.transition-theme {
+  transition: background-color 0.5s ease, color 0.5s ease;
+}

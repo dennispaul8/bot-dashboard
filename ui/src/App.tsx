@@ -1,13 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  Home,
-  BarChart2,
-  Settings,
-  LogOut,
-  Upload,
-  Menu,
-  X,
-} from "lucide-react";
+import { Home, BarChart2, Settings, Upload, Menu, X } from "lucide-react";
 import {
   LineChart,
   Line,
@@ -18,8 +10,14 @@ import {
   ResponsiveContainer,
   BarChart,
   Bar,
+  Cell,
 } from "recharts";
+import { XLogoIcon } from "@phosphor-icons/react";
 import { io } from "socket.io-client";
+import { useTheme } from "./ThemeContext";
+import { AnimatePresence, motion } from "framer-motion";
+import ThemeSelector from "./components/ThemeSelector";
+import LogoutButton from "./components/LogoutButton";
 
 export default function App() {
   const [activeTab, setActiveTab] = useState("overview");
@@ -31,7 +29,8 @@ export default function App() {
   const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
   const [logs, setLogs] = useState<string[]>([]);
 
-  // Settings state
+  const { theme, setTheme } = useTheme();
+
   // Settings state
   const [customMessage, setCustomMessage] = useState(
     "🎉 Thank you for your support!"
@@ -79,37 +78,60 @@ export default function App() {
 
   // Generate mock analytics when followers are fetched
   useEffect(() => {
-    if (followers) {
-      // Simulate last 6 weeks (7-day intervals)
-      const today = new Date();
-      const history = [];
-      let baseFollowers = followers * 0.5; // start 6 weeks ago at 50%
+    if (followers == null) return; // 🧩 Prevent null follower errors
 
-      for (let i = 6; i >= 0; i--) {
-        const date = new Date(today);
-        date.setDate(today.getDate() - i * 7); // every 7 days
-        const dateLabel = date.toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-        });
+    // 📊 Simulate last 6 weeks (7-day intervals)
+    const today = new Date();
+    const history = [];
+    let baseFollowers = followers * 0.5; // start 6 weeks ago at 50%
 
-        // smooth growth simulation
-        const followerCount = Math.round(
-          baseFollowers + (followers - baseFollowers) * (1 - i / 6)
-        );
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(today.getDate() - i * 7); // every 7 days
+      const dateLabel = date.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      });
 
-        history.push({ date: dateLabel, followers: followerCount });
-      }
+      // smooth growth simulation
+      const followerCount = Math.round(
+        baseFollowers + (followers - baseFollowers) * (1 - i / 6)
+      );
 
-      setFollowerData(history);
-
-      // Auto-generate milestones (every 500)
-      const milestones = [];
-      for (let m = 500; m <= followers; m += 500) {
-        milestones.push({ milestone: m.toString(), count: 1 });
-      }
-      setMilestoneData(milestones);
+      history.push({ date: dateLabel, followers: followerCount });
     }
+
+    setFollowerData(history);
+
+    // 🎯 Milestone data
+    const presetMilestones = Array.from(
+      { length: 100 },
+      (_, i) => (i + 1) * 100
+    );
+    const milestones: { milestone: string; count: number }[] = [];
+
+    // Add all reached milestones
+    presetMilestones.forEach((m) => {
+      if (followers >= m) {
+        milestones.push({ milestone: m.toString(), count: m });
+      }
+    });
+
+    // Add next milestone progress
+    const nextMilestone = presetMilestones.find((m) => m > followers);
+    if (nextMilestone) {
+      milestones.push({
+        milestone: nextMilestone.toString(),
+        count: followers, // partial progress
+      });
+    }
+
+    // Fallback for very new users
+    if (milestones.length === 0) {
+      milestones.push({ milestone: "100", count: followers });
+    }
+
+    setMilestoneData(milestones);
   }, [followers]);
 
   useEffect(() => {
@@ -232,21 +254,58 @@ export default function App() {
     }
   };
 
+  const colors = {
+    default: {
+      hover: "hover:bg-gray-200 text-gray-800",
+      active: "bg-gray-300 text-gray-900 font-semibold",
+    },
+    dim: {
+      hover: "hover:bg-[#22303C] text-gray-100",
+      active: "bg-[#273746] text-white font-semibold",
+    },
+    lightsout: {
+      hover: "hover:bg-[#161616] text-gray-100",
+      active: "bg-gray-600 text-white font-semibold",
+    },
+  };
+
+  const currentColors = colors[theme] || colors.default;
+
+  const variants = {
+    default: {
+      initial: { opacity: 0, x: 0 },
+      animate: { opacity: 1, x: 0 },
+      exit: { opacity: 0, y: 50 },
+    },
+    dim: {
+      initial: { opacity: 0, y: -50 },
+      animate: { opacity: 1, y: 0 },
+      exit: { opacity: 0, y: 50 },
+    },
+    lightsout: {
+      initial: { opacity: 0, y: 0 },
+      animate: { opacity: 1, y: 0 },
+      exit: { opacity: 0, y: -50 },
+    },
+  };
+
+  useEffect(() => {
+    console.log("Milestone Data:", milestoneData);
+  }, [milestoneData]);
+
   if (!userId) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-slate-900 text-white">
-        <div className="bg-slate-800 p-10 rounded-2xl text-center">
-          <h1 className="text-2xl font-bold mb-6">Bot Dashboard</h1>
+      <div className="flex items-center justify-center min-h-screen bg-bg text-text">
+        <div className="bg-bg text-text p-10 rounded-2xl text-center">
+          <h1 className="text-2xl font-bold mb-6">TweetBoard</h1>
           <button
             onClick={connectTwitter}
-            className="flex items-center gap-3 bg-blue-500 hover:bg-blue-600 px-6 py-3 rounded-lg font-semibold"
+            className="flex items-center text-white gap-3 bg-blue-500 hover:bg-blue-600 px-6 py-3 rounded-lg font-semibold"
           >
-            <img
-              src="https://abs.twimg.com/icons/apple-touch-icon-192x192.png"
-              alt="Twitter"
-              className="w-6 h-6"
-            />
-            Connect with Twitter
+            Connect with{" "}
+            <span>
+              <XLogoIcon size={22} weight="bold" />
+            </span>
           </button>
         </div>
       </div>
@@ -254,205 +313,330 @@ export default function App() {
   }
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-slate-900 text-white">
-      {/* Mobile Header */}
-      <div className="md:hidden flex items-center justify-between p-4 bg-slate-800">
-        <h1 className="text-xl font-bold">Bot Dashboard</h1>
-        <button onClick={() => setSidebarOpen(!sidebarOpen)}>
-          {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
-      </div>
-
-      {/* Sidebar */}
-      <aside
-        className={`fixed md:static z-20 top-0 left-0 h-full bg-slate-800 p-6 w-64 transform ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } transition-transform duration-300 ease-in-out md:translate-x-0 flex flex-col`}
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={theme} // triggers animation when theme changes
+        initial={variants[theme].initial}
+        animate={variants[theme].animate}
+        exit={variants[theme].exit}
+        transition={{ duration: 0.4, ease: "easeInOut" }}
+        className={`min-h-screen transition-colors duration-500 ${
+          theme === "default"
+            ? "bg-white text-black"
+            : theme === "dim"
+            ? "bg-[#15202B] text-gray-100"
+            : "bg-black text-gray-100"
+        }`}
       >
-        <h1 className="text-2xl font-bold mb-10 hidden md:block">
-          Bot Dashboard
-        </h1>
-
-        {username && (
-          <div className="flex items-center gap-3 mb-6">
-            {profileImageUrl && (
-              <img
-                src={profileImageUrl}
-                alt="Profile"
-                className="w-10 h-10 rounded-full"
-              />
-            )}
-            <div>
-              <p className="font-semibold">@{username}</p>
-              <p className="text-sm text-slate-400">{followers} followers</p>
-            </div>
-          </div>
-        )}
-
-        <nav className="flex-1 space-y-4">
-          {[
-            { tab: "overview", icon: Home, label: "Overview" },
-            { tab: "analytics", icon: BarChart2, label: "Analytics" },
-            { tab: "settings", icon: Settings, label: "Settings" },
-          ].map(({ tab, icon: Icon, label }) => (
-            <button
-              key={tab}
-              onClick={() => {
-                setActiveTab(tab);
-                setSidebarOpen(false);
-              }}
-              className={`flex items-center gap-3 w-full text-left p-2 rounded-lg hover:bg-slate-700 ${
-                activeTab === tab ? "bg-slate-700" : ""
-              }`}
-            >
-              <Icon size={18} /> {label}
+        <div className="flex flex-col md:flex-row min-h-screen bg-bg text-text">
+          {/* Mobile Header */}
+          <div className="md:hidden flex items-center justify-between p-4 bg-bg text-text">
+            <h1 className="text-xl font-bold">TweetBoard</h1>
+            <button onClick={() => setSidebarOpen(!sidebarOpen)}>
+              {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
-          ))}
-        </nav>
+          </div>
 
-        <button className="mt-auto flex gap-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg">
-          <LogOut size={18} /> Logout
-        </button>
-      </aside>
-
-      {/* Overlay for mobile sidebar */}
-      {sidebarOpen && (
-        <div
-          onClick={() => setSidebarOpen(false)}
-          className="fixed inset-0 bg-black/40 backdrop-blur-sm md:hidden z-10"
-        ></div>
-      )}
-
-      {/* Main content */}
-      <main className="flex-1 p-6 md:p-10 mt-4 md:mt-0">
-        <div className="flex justify-between items-center mb-8">
-          <h2 className="text-xl font-semibold capitalize">{activeTab}</h2>
-          <button
-            onClick={handleRunBot}
-            className="bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-lg"
+          {/* Sidebar */}
+          <aside
+            className={`fixed md:static z-20 top-0 left-0 min-h-screen bg-bg text-text p-6 w-64 transform ${
+              sidebarOpen ? "translate-x-0" : "-translate-x-full"
+            } transition-transform duration-300 ease-in-out md:translate-x-0 flex flex-col`}
           >
-            Run Bot
-          </button>
-        </div>
+            <h1 className="text-2xl font-bold mb-10 hidden md:block">
+              TweetBoard
+            </h1>
 
-        {/* Tabs */}
-        {activeTab === "overview" && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-white/10 rounded-2xl p-6">
-              <h2 className="text-lg font-semibold">Follower Count</h2>
-              <p className="text-3xl font-bold mt-2">
-                {followers !== null ? followers : "Loading..."}
-              </p>
-            </div>
-
-            <div className="bg-white/10 rounded-2xl p-6">
-              <h2 className="text-lg font-semibold">Last Milestone</h2>
-              <p className="text-3xl font-bold mt-2">{milestone}</p>
-            </div>
-
-            <div className="md:col-span-2">
-              <h2 className="text-lg font-semibold mb-3">Activity Log</h2>
-              <div className="bg-black/40 rounded-lg p-4 text-sm h-60 overflow-y-auto space-y-2 flex flex-col">
-                {logs.length === 0 ? (
-                  <p className="text-slate-400 text-center mt-20">
-                    No activity log yet
-                  </p>
-                ) : (
-                  logs.map((log, i) => <p key={i}>{log}</p>)
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeTab === "analytics" && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="bg-white/10 rounded-xl p-6">
-              <h3 className="text-lg font-semibold mb-4">📈 Follower Growth</h3>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={followerData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#555" />
-                  <XAxis dataKey="date" stroke="#ccc" />
-                  <YAxis stroke="#ccc" />
-                  <Tooltip />
-                  <Line
-                    type="monotone"
-                    dataKey="followers"
-                    stroke="#3b82f6"
-                    strokeWidth={2}
+            {username && (
+              <div className="flex items-center gap-3 mb-6">
+                {profileImageUrl && (
+                  <img
+                    src={profileImageUrl}
+                    alt="Profile"
+                    className="w-10 h-10 rounded-full"
                   />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
+                )}
+                <div>
+                  <p className="font-semibold">@{username}</p>
+                  <p className="text-sm text-slate-400">
+                    {followers} followers
+                  </p>
+                </div>
+              </div>
+            )}
 
-            <div className="bg-white/10 rounded-xl p-6">
-              <h3 className="text-lg font-semibold mb-4">🎯 Milestones Hit</h3>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={milestoneData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#555" />
-                  <XAxis dataKey="milestone" stroke="#ccc" />
-                  <YAxis stroke="#ccc" />
-                  <Tooltip />
-                  <Bar dataKey="count" fill="#22c55e" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        )}
+            <nav className="flex-1 space-y-2">
+              {[
+                { tab: "overview", icon: Home, label: "Overview" },
+                { tab: "analytics", icon: BarChart2, label: "Analytics" },
+                { tab: "settings", icon: Settings, label: "Settings" },
+              ].map(({ tab, icon: Icon, label }) => (
+                <button
+                  key={tab}
+                  onClick={() => {
+                    setActiveTab(tab);
+                    setSidebarOpen(false);
+                  }}
+                  className={`flex items-center gap-3 w-full text-left p-2 rounded-xl transition-colors duration-200
+            ${activeTab === tab ? currentColors.active : currentColors.hover}
+          `}
+                >
+                  <Icon size={18} /> <span>{label}</span>
+                </button>
+              ))}
+            </nav>
 
-        {activeTab === "settings" && (
-          <div className="bg-white/10 p-6 rounded-xl space-y-6">
-            <div>
-              <h3 className="text-lg font-semibold mb-2">💬 Custom Message</h3>
-              <textarea
-                value={customMessage}
-                onChange={(e) => setCustomMessage(e.target.value)}
-                className="w-full p-3 rounded-lg bg-slate-800 text-white border border-slate-600"
-              />
+            <LogoutButton />
+          </aside>
+
+          {/* Overlay for mobile sidebar */}
+          {sidebarOpen && (
+            <div
+              onClick={() => setSidebarOpen(false)}
+              className="fixed inset-0 bg-black/40 backdrop-blur-sm md:hidden z-10"
+            ></div>
+          )}
+
+          {/* Main content */}
+          <main className="flex-1 p-6 md:p-10 mt-4 md:mt-0">
+            <div className="flex justify-between items-center mb-8">
+              <h2 className="text-xl font-semibold capitalize">{activeTab}</h2>
               <button
-                onClick={saveMessage}
-                className="mt-3 bg-green-500 hover:bg-green-600 px-4 py-2 rounded-lg"
+                onClick={handleRunBot}
+                className="bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-lg"
               >
-                Save Message
+                Manual Run Bot
               </button>
             </div>
 
-            <div>
-              <h3 className="text-lg font-semibold mb-2">
-                🎞️ Upload Celebration GIF
-              </h3>
-              <input
-                type="file"
-                accept="image/gif"
-                onChange={handleFileChange}
-                className="block w-full text-sm text-slate-300 file:mr-4 file:py-2 file:px-4
+            {/* Tabs */}
+            {activeTab === "overview" && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div
+                  className={`rounded-2xl p-6 transition-colors duration-500 ${
+                    theme === "default"
+                      ? "bg-gray-100 text-gray-900"
+                      : theme === "dim"
+                      ? "bg-gray-800 text-gray-100"
+                      : "bg-white/10 text-gray-200"
+                  }`}
+                >
+                  <h2 className="text-lg font-semibold">Follower Count</h2>
+                  <p className="text-3xl font-bold mt-2">
+                    {followers !== null ? followers : "Loading..."}
+                  </p>
+                </div>
+                <div
+                  className={`rounded-2xl p-6 transition-colors duration-500 ${
+                    theme === "default"
+                      ? "bg-gray-100 text-gray-900"
+                      : theme === "dim"
+                      ? "bg-gray-800 text-gray-100"
+                      : "bg-white/10 text-gray-200"
+                  }`}
+                >
+                  <h2 className="text-lg font-semibold">Last Milestone</h2>
+                  <p className="text-3xl font-bold mt-2">{milestone}</p>
+                </div>
+                <div className="md:col-span-2">
+                  <h2 className="text-lg font-semibold mb-3">Activity Log</h2>
+                  <div
+                    className={`rounded-lg p-4 text-sm h-60 overflow-y-auto space-y-2 flex flex-col transition-colors duration-500 ${
+                      theme === "default"
+                        ? "bg-gray-100 text-gray-900"
+                        : theme === "dim"
+                        ? "bg-gray-800 text-gray-100"
+                        : "bg-white/10 text-gray-300"
+                    }`}
+                  >
+                    {logs.length === 0 ? (
+                      <p
+                        className={`text-center mt-20 ${
+                          theme === "default"
+                            ? "text-gray-500"
+                            : "text-slate-400"
+                        }`}
+                      >
+                        No activity log yet
+                      </p>
+                    ) : (
+                      logs.map((log, i) => <p key={i}>{log}</p>)
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+            {activeTab === "analytics" && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 transition-colors duration-500">
+                {/* Follower Growth */}
+                <div
+                  className={`rounded-xl p-6 transition-colors duration-500 ${
+                    theme === "default"
+                      ? "bg-gray-100 text-gray-900"
+                      : theme === "dim"
+                      ? "bg-white/10 text-gray-100"
+                      : "bg-white/10 text-gray-200"
+                  }`}
+                >
+                  <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                    Follower Growth 📈
+                  </h3>
+
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart data={followerData}>
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                        stroke={theme === "default" ? "#ddd" : "#444"}
+                      />
+                      <XAxis
+                        dataKey="date"
+                        stroke={theme === "default" ? "#555" : "#ccc"}
+                      />
+                      <YAxis stroke={theme === "default" ? "#555" : "#ccc"} />
+                      <Tooltip
+                        contentStyle={{
+                          background:
+                            theme === "default"
+                              ? "#f9f9f9"
+                              : theme === "dim"
+                              ? "#1e293b"
+                              : "#0f172a",
+                          border: "none",
+                          color: theme === "default" ? "#000" : "#fff",
+                        }}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="followers"
+                        stroke={theme === "default" ? "#2563eb" : "#3b82f6"}
+                        strokeWidth={2}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+
+                {/* Milestones Hit */}
+                <div
+                  className={`rounded-xl p-6 transition-colors duration-500 ${
+                    theme === "default"
+                      ? "bg-gray-100 text-gray-900"
+                      : theme === "dim"
+                      ? "bg-white/10 text-gray-100"
+                      : "bg-white/10 text-gray-200"
+                  }`}
+                >
+                  <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                    Milestones Hit 🎯
+                  </h3>
+
+                  {milestoneData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height={300}>
+                      <BarChart data={milestoneData}>
+                        <CartesianGrid
+                          strokeDasharray="3 3"
+                          stroke={theme === "default" ? "#ddd" : "#444"}
+                        />
+                        <XAxis
+                          dataKey="milestone"
+                          stroke={theme === "default" ? "#555" : "#ccc"}
+                        />
+                        <YAxis stroke={theme === "default" ? "#555" : "#ccc"} />
+                        <Tooltip
+                          contentStyle={{
+                            background:
+                              theme === "default"
+                                ? "#f9f9f9"
+                                : theme === "dim"
+                                ? "#1e293b"
+                                : "#0f172a",
+                            border: "none",
+                            color: theme === "default" ? "#000" : "#fff",
+                          }}
+                        />
+                        <Bar dataKey="count" radius={[8, 8, 0, 0]}>
+                          {milestoneData.map((entry, index) => {
+                            const milestoneValue = Number(entry.milestone);
+                            const isReached =
+                              (followers ?? 0) >= milestoneValue;
+                            return (
+                              <Cell
+                                key={`cell-${index}`}
+                                fill={isReached ? "#22c55e" : "#3b82f6"}
+                              />
+                            );
+                          })}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <p className="text-center text-gray-400 mt-8">
+                      No milestone data yet
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {activeTab === "settings" && (
+              <div className="bg-white/10 p-6 rounded-xl space-y-6">
+                <div>
+                  <h3 className="text-lg font-semibold mb-3">Theme</h3>
+                  <ThemeSelector theme={theme} setTheme={setTheme} />
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Custom Message</h3>
+                  <textarea
+                    value={customMessage}
+                    onChange={(e) => setCustomMessage(e.target.value)}
+                    className="w-full p-3 rounded-lg bg-bg text-text border border-slate-600"
+                  />
+                  <button
+                    onClick={saveMessage}
+                    className="mt-3 bg-green-500 hover:bg-green-600 px-4 py-2 rounded-lg"
+                  >
+                    Save Message
+                  </button>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">
+                    Upload Celebration GIF 🎞️
+                  </h3>
+                  <input
+                    type="file"
+                    accept="image/gif"
+                    onChange={handleFileChange}
+                    className="block w-full text-sm text-slate-300 file:mr-4 file:py-2 file:px-4
                   file:rounded-lg file:border-0
                   file:text-sm file:font-semibold
                   file:bg-blue-500 file:text-white
                   hover:file:bg-blue-600"
-              />
-              {preview && (
-                <div className="mt-3">
-                  <p className="text-sm text-slate-400">Preview:</p>
-                  <img
-                    src={preview}
-                    alt="GIF preview"
-                    className="rounded-lg border mt-2 w-48"
                   />
+                  {preview && (
+                    <div className="mt-3">
+                      <p className="text-sm text-slate-400">Preview:</p>
+                      <img
+                        src={preview}
+                        alt="GIF preview"
+                        className="rounded-lg border mt-2 w-48"
+                      />
+                    </div>
+                  )}
+                  <button
+                    onClick={uploadGif}
+                    disabled={!gifFile}
+                    className="mt-3 bg-purple-500 hover:bg-purple-600 px-4 py-2 rounded-lg"
+                  >
+                    <Upload size={16} className="inline mr-2" />
+                    Upload GIF
+                  </button>
                 </div>
-              )}
-              <button
-                onClick={uploadGif}
-                disabled={!gifFile}
-                className="mt-3 bg-purple-500 hover:bg-purple-600 px-4 py-2 rounded-lg"
-              >
-                <Upload size={16} className="inline mr-2" />
-                Upload GIF
-              </button>
-            </div>
-          </div>
-        )}
-      </main>
-    </div>
+              </div>
+            )}
+          </main>
+        </div>
+      </motion.div>
+    </AnimatePresence>
   );
 }
