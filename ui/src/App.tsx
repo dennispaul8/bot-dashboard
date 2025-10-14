@@ -143,7 +143,7 @@ export default function App() {
 
     // Fallback for very new users
     if (milestones.length === 0) {
-      milestones.push({ milestone: "100", count: followers });
+      milestones.push({ milestone: "", count: followers });
     }
 
     setMilestoneData(milestones);
@@ -379,52 +379,59 @@ export default function App() {
           <aside
             className={`fixed md:static z-20 top-0 left-0 min-h-screen bg-bg text-text p-6 w-64 transform ${
               sidebarOpen ? "translate-x-0" : "-translate-x-full"
-            } transition-transform duration-300 ease-in-out md:translate-x-0 flex flex-col`}
+            } transition-transform duration-300 ease-in-out md:translate-x-0 flex flex-col justify-between`}
           >
-            <h1 className="text-2xl font-bold mb-10 hidden md:block">
-              TweetBoard
-            </h1>
+            <div>
+              <h1 className="text-2xl font-bold mb-10 hidden md:block">
+                TweetBoard
+              </h1>
 
-            {username && (
-              <div className="flex items-center gap-3 mb-6">
-                {profileImageUrl && (
-                  <img
-                    src={profileImageUrl}
-                    alt="Profile"
-                    className="w-10 h-10 rounded-full"
-                  />
-                )}
-                <div>
-                  <p className="font-semibold">@{username}</p>
-                  <p className="text-sm text-slate-400">
-                    {followers} followers
-                  </p>
+              {username && (
+                <div className="flex items-center gap-3 mb-6">
+                  {profileImageUrl && (
+                    <img
+                      src={profileImageUrl}
+                      alt="Profile"
+                      className="w-10 h-10 rounded-full"
+                    />
+                  )}
+                  <div>
+                    <p className="font-semibold">@{username}</p>
+                    <p className="text-sm text-slate-400">
+                      {followers} followers
+                    </p>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            <nav className="flex-1 space-y-2">
-              {[
-                { tab: "overview", icon: Home, label: "Overview" },
-                { tab: "analytics", icon: BarChart2, label: "Analytics" },
-                { tab: "settings", icon: Settings, label: "Settings" },
-              ].map(({ tab, icon: Icon, label }) => (
-                <button
-                  key={tab}
-                  onClick={() => {
-                    setActiveTab(tab);
-                    setSidebarOpen(false);
-                  }}
-                  className={`flex items-center gap-3 w-full text-left p-2 rounded-xl transition-colors duration-200
-            ${activeTab === tab ? currentColors.active : currentColors.hover}
-          `}
-                >
-                  <Icon size={18} /> <span>{label}</span>
-                </button>
-              ))}
-            </nav>
+              <nav className="space-y-2">
+                {[
+                  { tab: "overview", icon: Home, label: "Overview" },
+                  { tab: "analytics", icon: BarChart2, label: "Analytics" },
+                  { tab: "settings", icon: Settings, label: "Settings" },
+                ].map(({ tab, icon: Icon, label }) => (
+                  <button
+                    key={tab}
+                    onClick={() => {
+                      setActiveTab(tab);
+                      setSidebarOpen(false);
+                    }}
+                    className={`flex items-center gap-3 w-full text-left p-2 rounded-xl transition-colors duration-200 ${
+                      activeTab === tab
+                        ? currentColors.active
+                        : currentColors.hover
+                    }`}
+                  >
+                    <Icon size={18} /> <span>{label}</span>
+                  </button>
+                ))}
+              </nav>
+            </div>
 
-            <LogoutButton />
+            {/* ✅ Logout stays pinned at the bottom */}
+            <div className="mt-8">
+              <LogoutButton />
+            </div>
           </aside>
 
           {/* Overlay for mobile sidebar */}
