@@ -45,7 +45,11 @@ async function runUserMilestoneCheck(userId) {
       `Followers: ${followers}, milestone: ${milestone}, last: ${last}`
     );
 
-    if (milestone > 0 && milestone !== last && followers >= milestone) {
+    if (
+      milestone > 0 &&
+      followers >= milestone &&
+      milestone > last // ✅ only celebrate forward progress
+    ) {
       // choose gif
       const gifPath = user.gifPath
         ? path.join(process.cwd(), user.gifPath)

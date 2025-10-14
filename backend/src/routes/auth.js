@@ -24,15 +24,15 @@ passport.use(
         const existing = await getUserByTwitterId(profile.id);
         const id = existing ? existing.id : `${profile.username || profile.id}`;
 
-        const saved = await createOrUpdateUser(id, {
+        const saved = createOrUpdateUser(id, {
           twitterId: profile.id,
           username: profile.username,
           displayName: profile.displayName,
           accessToken: token,
           accessSecret: tokenSecret,
-          message: "🎉 Thank you for your support!",
-          gifPath: "",
-          lastMilestone: 0,
+          message: existing?.message || "🎉 Thank you for your support!",
+          gifPath: existing?.gifPath || "",
+          lastMilestone: existing?.lastMilestone || 0, // ✅ preserve milestone
         });
 
         return done(null, saved);

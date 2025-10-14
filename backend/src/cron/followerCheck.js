@@ -47,7 +47,7 @@ cron.schedule("*/15 * * * *", async () => {
       addLog(userId, `✅ Auto check: ${followers} followers`);
 
       // 🎯 Only tweet new milestones
-      if (milestone > lastMilestone && milestone !== 0) {
+      if (milestone > (user.lastMilestone ?? 0)) {
         addLog(
           userId,
           `🎯 Milestone ${milestone} reached! Posting tweet with message${

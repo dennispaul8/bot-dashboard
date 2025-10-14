@@ -21,7 +21,7 @@ router.post("/check/:userId", async (req, res) => {
   });
 
   try {
-    addLog(userId, "Started follower check via Twitter API");
+    addLog(userId, "Started follower check...");
     const response = await fetch(
       `https://api.twitter.com/2/users/by/username/${userId}?user.fields=public_metrics,profile_image_url`,
       {
