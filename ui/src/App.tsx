@@ -588,7 +588,7 @@ export default function App() {
                                 ? "#1e293b"
                                 : "#0f172a",
                             border: "none",
-                            color: theme === "default" ? "#000" : "#fff",
+                            color: theme === "default" ? "#fff" : "#fff",
                           }}
                         />
                         <Bar dataKey="count" radius={[8, 8, 0, 0]}>
@@ -599,7 +599,7 @@ export default function App() {
                             return (
                               <Cell
                                 key={`cell-${index}`}
-                                fill={isReached ? "#22c55e" : "#3b82f6"}
+                                fill={isReached ? "#22c55e" : "#83868bff"}
                               />
                             );
                           })}
