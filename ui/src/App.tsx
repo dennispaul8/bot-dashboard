@@ -588,7 +588,7 @@ export default function App() {
                                 ? "#1e293b"
                                 : "#0f172a",
                             border: "none",
-                            color: theme === "default" ? "#fff" : "#fff",
+                            color: theme === "default" ? "#000" : "#fff",
                           }}
                         />
                         <Bar dataKey="count" radius={[8, 8, 0, 0]}>
