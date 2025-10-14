@@ -73,7 +73,7 @@ cron.schedule("*/15 * * * *", async () => {
       if (global.io) {
         global.io.emit(
           `log-update-${userId}`,
-          `Cron job ran — checked ${followers} followers`
+          `Bot checked - ${followers} followers`
         );
       }
     } catch (err) {
