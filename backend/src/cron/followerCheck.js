@@ -25,7 +25,34 @@ cron.schedule("*/15 * * * *", async () => {
       );
 
       if (!res.ok) {
-        addLog(userId, `⚠️ Twitter API error: ${res.status}`);
+        let friendlyMsg;
+
+        switch (res.status) {
+          case 429:
+            friendlyMsg =
+              "⚠️ Too many requests — please wait a bit before trying again.";
+            break;
+          case 500:
+          case 502:
+          case 503:
+            friendlyMsg =
+              "⚠️ Twitter seems to be having some issues — please try again later.";
+            break;
+          case 401:
+          case 403:
+            friendlyMsg =
+              "⚠️ Your Twitter connection might have expired. Please reconnect your account.";
+            break;
+          default:
+            friendlyMsg =
+              "⚠️ Unable to fetch your Twitter data right now. Please try again shortly.";
+        }
+
+        // Log a user-friendly message
+        addLog(userId, friendlyMsg);
+
+        // Also log technical detail privately for debugging
+        console.error(`Twitter API error for ${userId}: ${res.status}`);
         continue;
       }
 

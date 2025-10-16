@@ -32,12 +32,38 @@ router.post("/check/:userId", async (req, res) => {
     );
 
     if (!response.ok) {
-      addLog(userId, `Twitter API error: ${response.status}`);
+      let friendlyMsg;
+
+      switch (response.status) {
+        case 429:
+          friendlyMsg =
+            "⚠️ Too many requests — please wait a bit before trying again.";
+          break;
+        case 500:
+        case 502:
+        case 503:
+          friendlyMsg =
+            "⚠️ Twitter seems to be having some temporary issues. Try again soon.";
+          break;
+        case 401:
+        case 403:
+          friendlyMsg =
+            "⚠️ Your Twitter connection might have expired. Please reconnect your account.";
+          break;
+        default:
+          friendlyMsg =
+            "⚠️ Unable to fetch your Twitter data right now. Please try again later.";
+      }
+
+      // Log user-friendly message for the UI
+      addLog(userId, friendlyMsg);
+
+      // Log full details for developer debugging
       const errorText = await response.text();
-      console.error("Twitter API error:", errorText);
+      console.error(`Twitter API error (${response.status}):`, errorText);
+
       return res.status(response.status).json({
-        error: `Twitter API error (${response.status})`,
-        details: errorText,
+        error: friendlyMsg,
       });
     }
 
