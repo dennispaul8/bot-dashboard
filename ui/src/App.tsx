@@ -560,37 +560,43 @@ export default function App() {
                     Follower Growth 📈
                   </h3>
 
-                  <ResponsiveContainer width="100%" height={300}>
-                    <LineChart data={followerData}>
-                      <CartesianGrid
-                        strokeDasharray="3 3"
-                        stroke={theme === "default" ? "#ddd" : "#444"}
-                      />
-                      <XAxis
-                        dataKey="date"
-                        stroke={theme === "default" ? "#555" : "#ccc"}
-                      />
-                      <YAxis stroke={theme === "default" ? "#555" : "#ccc"} />
-                      <Tooltip
-                        contentStyle={{
-                          background:
-                            theme === "default"
-                              ? "#f9f9f9"
-                              : theme === "dim"
-                              ? "#1e293b"
-                              : "#0f172a",
-                          border: "none",
-                          color: theme === "default" ? "#000" : "#fff",
-                        }}
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="followers"
-                        stroke={theme === "default" ? "#2563eb" : "#3b82f6"}
-                        strokeWidth={2}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
+                  {followerData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height={300}>
+                      <LineChart data={followerData}>
+                        <CartesianGrid
+                          strokeDasharray="3 3"
+                          stroke={theme === "default" ? "#ddd" : "#444"}
+                        />
+                        <XAxis
+                          dataKey="date"
+                          stroke={theme === "default" ? "#555" : "#ccc"}
+                        />
+                        <YAxis stroke={theme === "default" ? "#555" : "#ccc"} />
+                        <Tooltip
+                          contentStyle={{
+                            background:
+                              theme === "default"
+                                ? "#f9f9f9"
+                                : theme === "dim"
+                                ? "#1e293b"
+                                : "#0f172a",
+                            border: "none",
+                            color: theme === "default" ? "#000" : "#fff",
+                          }}
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="followers"
+                          stroke={theme === "default" ? "#2563eb" : "#3b82f6"}
+                          strokeWidth={2}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <p className="text-center text-gray-400 mt-8">
+                      No follower data yet
+                    </p>
+                  )}
                 </div>
 
                 {/* Milestones Hit */}
