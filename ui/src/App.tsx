@@ -477,12 +477,14 @@ export default function App() {
           <main className="flex-1 p-6 md:p-10 mt-4 md:mt-0">
             <div className="flex justify-between items-center mb-8">
               <h2 className="text-xl font-semibold capitalize">{activeTab}</h2>
-              <button
-                onClick={handleRunBot}
-                className="bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-lg"
-              >
-                Run Bot
-              </button>
+              {activeTab === "overview" && (
+                <button
+                  onClick={handleRunBot}
+                  className="bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-lg transition-colors duration-300"
+                >
+                  Run Bot
+                </button>
+              )}
             </div>
 
             {/* Tabs */}
