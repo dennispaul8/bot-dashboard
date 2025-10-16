@@ -299,14 +299,17 @@ export default function App() {
 
   const colors = {
     default: {
+      bg: "bg-gray-100 text-gray-900",
       hover: "hover:bg-gray-200 text-gray-800",
       active: "bg-gray-300 text-gray-900 font-semibold",
     },
     dim: {
+      bg: "bg-[#15202B] text-gray-100",
       hover: "hover:bg-[#22303C] text-gray-100",
       active: "bg-[#273746] text-white font-semibold",
     },
     lightsout: {
+      bg: "bg-black text-gray-100",
       hover: "hover:bg-[#161616] text-gray-100",
       active: "bg-gray-600 text-white font-semibold",
     },
@@ -403,9 +406,11 @@ export default function App() {
 
           {/* Sidebar */}
           <aside
-            className={`fixed md:static z-20 top-0 left-0 min-h-screen bg-bg text-text p-6 w-64 transform ${
+            className={`fixed md:static z-20 top-0 left-0 min-h-screen p-6 w-64 transform ${
               sidebarOpen ? "translate-x-0" : "-translate-x-full"
-            } transition-transform duration-300 ease-in-out md:translate-x-0 flex flex-col justify-between`}
+            } transition-all duration-500 ease-in-out md:translate-x-0 flex flex-col justify-between ${
+              currentColors.bg
+            }`}
           >
             <div>
               <h1 className="text-2xl font-bold mb-10 hidden md:block">
