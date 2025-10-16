@@ -215,9 +215,35 @@ export default function App() {
       setLogs((prev) => [`❌ Failed to connect to backend`, ...prev]);
     }
   };
+
+  const fetchUserData = async (id: string) => {
+    try {
+      const res = await fetch(
+        `https://bot-dashboard-5q84.onrender.com/api/user/${id}`
+      );
+      const data = await res.json();
+
+      if (res.ok) {
+        setUsername(data.username);
+        setFollowers(data.followers);
+        setMilestone(data.followers);
+        setProfileImageUrl(data.profile_image_url);
+        console.log("🔄 Refetched user data:", data);
+      } else {
+        console.error("Failed to fetch user data:", data.error);
+      }
+    } catch (err) {
+      console.error("Fetch user error:", err);
+    }
+  };
+
   const handleRunBot = async () => {
     await runBot();
-    // await fetchLogs();
+
+    if (userId) {
+      // ⏳ Refetch latest username, followers, and profile image
+      await fetchUserData(userId);
+    }
   };
   const saveMessage = async () => {
     setLogs((prev) => [
@@ -450,7 +476,7 @@ export default function App() {
                 onClick={handleRunBot}
                 className="bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-lg"
               >
-                Manual Run Bot
+                Run Bot
               </button>
             </div>
 
