@@ -634,9 +634,15 @@ export default function App() {
                                 ? "#1e293b"
                                 : "#0f172a",
                             border: "none",
-                            color: theme === "default" ? "#000" : "#fff",
+                          }}
+                          itemStyle={{
+                            color: theme === "default" ? "#000" : "#fff", // fixes text color inside tooltip
+                          }}
+                          labelStyle={{
+                            color: theme === "default" ? "#000" : "#fff", // fixes label text too
                           }}
                         />
+
                         <Bar dataKey="count" radius={[8, 8, 0, 0]}>
                           {milestoneData.map((entry, index) => {
                             const milestoneValue = Number(entry.milestone);
