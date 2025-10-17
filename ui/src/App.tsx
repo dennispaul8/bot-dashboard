@@ -161,6 +161,12 @@ export default function App() {
           setFollowers(data.followers);
           setMilestone(data.followers);
           setProfileImageUrl(data.profile_image_url);
+
+          localStorage.setItem(
+            "tweetboard_profile_image",
+            data.profile_image_url
+          );
+
           console.log("Twitter data:", data);
         })
         .catch((err) => console.error(err));
@@ -339,6 +345,29 @@ export default function App() {
     console.log("Milestone Data:", milestoneData);
   }, [milestoneData]);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const usernameFromAuth = params.get("username");
+    const userIdFromAuth = params.get("userId");
+
+    if (usernameFromAuth) {
+      localStorage.setItem("tweetboard_username", usernameFromAuth);
+      setUsername(usernameFromAuth);
+    } else {
+      const stored = localStorage.getItem("tweetboard_username");
+      if (stored) setUsername(stored);
+    }
+
+    if (userIdFromAuth) {
+      localStorage.setItem("tweetboard_userId", userIdFromAuth);
+      setUserId(userIdFromAuth);
+    }
+
+    // ✅ Restore cached profile image
+    const storedImage = localStorage.getItem("tweetboard_profile_image");
+    if (storedImage) setProfileImageUrl(storedImage);
+  }, []);
+
   if (!userId) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-bg text-text">
@@ -433,6 +462,18 @@ export default function App() {
                     </p>
                   </div>
                 </div>
+              )}
+
+              <h2 className="text-2xl font-bold">
+                Welcome, @{username || "friend"} 👋
+              </h2>
+
+              {profileImageUrl && (
+                <img
+                  src={profileImageUrl}
+                  alt="Profile"
+                  className="w-10 h-10 rounded-full"
+                />
               )}
 
               <nav className="space-y-2">
