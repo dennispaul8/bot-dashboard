@@ -369,6 +369,7 @@ export default function App() {
     const params = new URLSearchParams(window.location.search);
     const usernameFromAuth = params.get("username");
     const userIdFromAuth = params.get("userId");
+    const profileImageUrlfromAuth = params.get("profileImageUrl");
 
     if (usernameFromAuth) {
       localStorage.setItem("tweetboard_username", usernameFromAuth);
@@ -378,14 +379,18 @@ export default function App() {
       if (stored) setUsername(stored);
     }
 
+    if (profileImageUrlfromAuth) {
+      localStorage.setItem("tweetboard_profile_image", profileImageUrlfromAuth);
+      setProfileImageUrl(profileImageUrlfromAuth);
+    } else {
+      const stored = localStorage.getItem("tweetboard_profile_image");
+      if (stored) setProfileImageUrl(stored);
+    }
+
     if (userIdFromAuth) {
       localStorage.setItem("tweetboard_userId", userIdFromAuth);
       setUserId(userIdFromAuth);
     }
-
-    // ✅ Restore cached profile image
-    const storedImage = localStorage.getItem("tweetboard_profile_image");
-    if (storedImage) setProfileImageUrl(storedImage);
   }, []);
 
   if (!userId) {
