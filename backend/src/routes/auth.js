@@ -53,6 +53,8 @@ router.get(
   passport.authenticate("twitter")
 );
 
+const fetch = require("node-fetch");
+
 router.get(
   "/twitter/callback",
   (req, res, next) => {
@@ -60,24 +62,49 @@ router.get(
     next();
   },
   passport.authenticate("twitter", { failureRedirect: "/auth/failure" }),
-  (req, res) => {
-    console.log("✅ Auth success:", req.user);
-    req.session.save((err) => {
-      if (err) console.error("Session save error:", err);
+  async (req, res) => {
+    try {
+      console.log("✅ Auth success:", req.user);
 
       const userId = req.user.id || req.user.username;
       const username = req.user.username;
       const profileImageUrl = req.user.photos?.[0]?.value || "";
 
-      // ✅ Redirect to frontend with both userId and username
+      // 🔹 Fetch followers count from Twitter API v2
+      const response = await fetch(
+        `https://api.twitter.com/2/users/by/username/${username}?user.fields=public_metrics`,
+        {
+          headers: {
+            Authorization: `Bearer ${process.env.BEARER_TOKEN}`,
+          },
+        }
+      );
+
+      let followers = 0;
+      if (response.ok) {
+        const data = await response.json();
+        followers = data.data?.public_metrics?.followers_count || 0;
+      } else {
+        console.warn("⚠️ Could not fetch followers:", response.status);
+      }
+
+      // ✅ Build frontend redirect URL
       const redirectUrl = `${
         process.env.FRONTEND_URL
       }?userId=${encodeURIComponent(userId)}&username=${encodeURIComponent(
         username
-      )}&profileImageUrl=${encodeURIComponent(profileImageUrl)}`;
+      )}&profileImageUrl=${encodeURIComponent(
+        profileImageUrl
+      )}&followers=${encodeURIComponent(followers)}`;
 
-      res.redirect(redirectUrl);
-    });
+      req.session.save((err) => {
+        if (err) console.error("Session save error:", err);
+        res.redirect(redirectUrl);
+      });
+    } catch (error) {
+      console.error("❌ Error in Twitter callback:", error);
+      res.redirect("/auth/failure");
+    }
   }
 );
 
