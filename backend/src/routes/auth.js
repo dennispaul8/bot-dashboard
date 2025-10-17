@@ -67,13 +67,14 @@ router.get(
 
       const userId = req.user.id || req.user.username;
       const username = req.user.username;
+      const profileImageUrl = req.user.photos?.[0]?.value || "";
 
       // ✅ Redirect to frontend with both userId and username
       const redirectUrl = `${
         process.env.FRONTEND_URL
       }?userId=${encodeURIComponent(userId)}&username=${encodeURIComponent(
         username
-      )}`;
+      )}&profileImageUrl=${encodeURIComponent(profileImageUrl)}`;
 
       res.redirect(redirectUrl);
     });
