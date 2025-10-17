@@ -29,7 +29,10 @@ export default function App() {
     localStorage.getItem("tweetboard_username") || ""
   );
   const [userId, setUserId] = useState<string | null>(null);
-  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
+  const [profileImageUrl, setProfileImageUrl] = useState(
+    localStorage.getItem("tweetboard_profile_image") || null
+  );
+
   const [logs, setLogs] = useState<string[]>([]);
 
   const { theme, setTheme } = useTheme();
