@@ -370,6 +370,7 @@ export default function App() {
     const usernameFromAuth = params.get("username");
     const userIdFromAuth = params.get("userId");
     const profileImageUrlfromAuth = params.get("profileImageUrl");
+    const followersFromAuth = params.get("followers");
 
     if (usernameFromAuth) {
       localStorage.setItem("tweetboard_username", usernameFromAuth);
@@ -390,8 +391,27 @@ export default function App() {
     if (userIdFromAuth) {
       localStorage.setItem("tweetboard_userId", userIdFromAuth);
       setUserId(userIdFromAuth);
+    } else {
+      const stored = localStorage.getItem("tweetboard_userId");
+      if (stored) setUserId(stored);
+    }
+
+    // ✅ Followers
+    if (followersFromAuth) {
+      localStorage.setItem("tweetboard_followers", followersFromAuth);
+      setFollowers(Number(followersFromAuth));
+    } else {
+      const stored = localStorage.getItem("tweetboard_followers");
+      if (stored) setFollowers(Number(stored));
     }
   }, []);
+
+  // ✅ Always sync followers to localStorage
+  useEffect(() => {
+    if (followers !== null) {
+      localStorage.setItem("tweetboard_followers", followers.toString());
+    }
+  }, [followers]);
 
   if (!userId) {
     return (
