@@ -64,8 +64,18 @@ router.get(
     console.log("✅ Auth success:", req.user);
     req.session.save((err) => {
       if (err) console.error("Session save error:", err);
+
       const userId = req.user.id || req.user.username;
-      res.redirect(`${process.env.FRONTEND_URL}?userId=${userId}`);
+      const username = req.user.username;
+
+      // ✅ Redirect to frontend with both userId and username
+      const redirectUrl = `${
+        process.env.FRONTEND_URL
+      }?userId=${encodeURIComponent(userId)}&username=${encodeURIComponent(
+        username
+      )}`;
+
+      res.redirect(redirectUrl);
     });
   }
 );
