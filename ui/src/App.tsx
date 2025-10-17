@@ -25,7 +25,9 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [followers, setFollowers] = useState<number | null>(null);
   const [milestone, setMilestone] = useState<number | null>(null);
-  const [username, setUsername] = useState("");
+  const [username, setUsername] = useState(
+    localStorage.getItem("tweetboard_username") || ""
+  );
   const [userId, setUserId] = useState<string | null>(null);
   const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
   const [logs, setLogs] = useState<string[]>([]);
@@ -155,8 +157,22 @@ export default function App() {
     if (id) {
       setUserId(id);
       fetch(`https://bot-dashboard-5q84.onrender.com/api/user/${id}`)
-        .then((res) => res.json())
-        .then((data) => {
+        .then(async (res) => {
+          if (res.status === 429) {
+            console.warn("⚠️ Rate limit hit — using cached data");
+            const cachedUsername = localStorage.getItem("tweetboard_username");
+            const cachedImage = localStorage.getItem(
+              "tweetboard_profile_image"
+            );
+            if (cachedUsername) setUsername(cachedUsername);
+            if (cachedImage) setProfileImageUrl(cachedImage);
+            return null; // stop further processing
+          }
+
+          const data = await res.json();
+          if (!res.ok)
+            throw new Error(data.error || "Failed to fetch user data");
+
           setUsername(data.username);
           setFollowers(data.followers);
           setMilestone(data.followers);
@@ -166,10 +182,11 @@ export default function App() {
             "tweetboard_profile_image",
             data.profile_image_url
           );
+          localStorage.setItem("tweetboard_username", data.username);
 
           console.log("Twitter data:", data);
         })
-        .catch((err) => console.error(err));
+        .catch((err) => console.error("Fetch user data error:", err));
     }
   }, []);
 
@@ -464,18 +481,6 @@ export default function App() {
                 </div>
               )}
 
-              <h2 className="text-2xl font-bold">
-                Welcome, @{username || "friend"} 👋
-              </h2>
-
-              {profileImageUrl && (
-                <img
-                  src={profileImageUrl}
-                  alt="Profile"
-                  className="w-10 h-10 rounded-full"
-                />
-              )}
-
               <nav className="space-y-2">
                 {[
                   { tab: "overview", icon: Home, label: "Overview" },
@@ -530,61 +535,97 @@ export default function App() {
 
             {/* Tabs */}
             {activeTab === "overview" && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div
-                  className={`rounded-2xl p-6 transition-colors duration-500 ${
-                    theme === "default"
-                      ? "bg-gray-100 text-gray-900"
-                      : theme === "dim"
-                      ? "bg-gray-800 text-gray-100"
-                      : "bg-white/10 text-gray-200"
-                  }`}
-                >
-                  <h2 className="text-lg font-semibold">Follower Count</h2>
-                  <p className="text-3xl font-bold mt-2">
-                    {followers !== null ? followers : "Loading..."}
-                  </p>
+              <div className="space-y-8">
+                {/* Welcome Header */}
+                <div className="flex items-center gap-4">
+                  {profileImageUrl && (
+                    <img
+                      src={profileImageUrl}
+                      alt="Profile"
+                      className="w-12 h-12 rounded-full border-2 border-blue-500 shadow-sm"
+                    />
+                  )}
+                  <div>
+                    <h2 className="text-xl font-bold">
+                      Welcome,{" "}
+                      <span className="text-blue-500">
+                        @{username || "friend"}
+                      </span>{" "}
+                      👋
+                    </h2>
+                    <p
+                      className={`text-sm ${
+                        theme === "default" ? "text-gray-500" : "text-slate-400"
+                      }`}
+                    >
+                      Glad to have you back!
+                    </p>
+                  </div>
                 </div>
-                <div
-                  className={`rounded-2xl p-6 transition-colors duration-500 ${
-                    theme === "default"
-                      ? "bg-gray-100 text-gray-900"
-                      : theme === "dim"
-                      ? "bg-gray-800 text-gray-100"
-                      : "bg-white/10 text-gray-200"
-                  }`}
-                >
-                  <h2 className="text-lg font-semibold">Last Milestone</h2>
-                  <p className="text-3xl font-bold mt-2">{milestone}</p>
-                </div>
-                <div className="md:col-span-2">
-                  <h2 className="text-lg font-semibold mb-3">Activity Log</h2>
+
+                {/* Stats & Activity Section */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Follower Count */}
                   <div
-                    className={`rounded-lg p-4 text-sm h-60 overflow-y-auto space-y-2 flex flex-col transition-colors duration-500 ${
+                    className={`rounded-2xl p-6 transition-colors duration-500 ${
                       theme === "default"
                         ? "bg-gray-100 text-gray-900"
                         : theme === "dim"
                         ? "bg-gray-800 text-gray-100"
-                        : "bg-white/10 text-gray-300"
+                        : "bg-white/10 text-gray-200"
                     }`}
                   >
-                    {logs.length === 0 ? (
-                      <p
-                        className={`text-center mt-20 ${
-                          theme === "default"
-                            ? "text-gray-500"
-                            : "text-slate-400"
-                        }`}
-                      >
-                        No activity log yet
-                      </p>
-                    ) : (
-                      logs.map((log, i) => <p key={i}>{log}</p>)
-                    )}
+                    <h2 className="text-lg font-semibold">Follower Count</h2>
+                    <p className="text-3xl font-bold mt-2">
+                      {followers !== null ? followers : "Loading..."}
+                    </p>
+                  </div>
+
+                  {/* Last Milestone */}
+                  <div
+                    className={`rounded-2xl p-6 transition-colors duration-500 ${
+                      theme === "default"
+                        ? "bg-gray-100 text-gray-900"
+                        : theme === "dim"
+                        ? "bg-gray-800 text-gray-100"
+                        : "bg-white/10 text-gray-200"
+                    }`}
+                  >
+                    <h2 className="text-lg font-semibold">Last Milestone</h2>
+                    <p className="text-3xl font-bold mt-2">{milestone}</p>
+                  </div>
+
+                  {/* Activity Log */}
+                  <div className="md:col-span-2">
+                    <h2 className="text-lg font-semibold mb-3">Activity Log</h2>
+                    <div
+                      className={`rounded-lg p-4 text-sm h-60 overflow-y-auto space-y-2 flex flex-col transition-colors duration-500 ${
+                        theme === "default"
+                          ? "bg-gray-100 text-gray-900"
+                          : theme === "dim"
+                          ? "bg-gray-800 text-gray-100"
+                          : "bg-white/10 text-gray-300"
+                      }`}
+                    >
+                      {logs.length === 0 ? (
+                        <p
+                          className={`text-center mt-20 ${
+                            theme === "default"
+                              ? "text-gray-500"
+                              : "text-slate-400"
+                          }`}
+                        >
+                          No activity log yet
+                        </p>
+                      ) : (
+                        logs.map((log, i) => <p key={i}>{log}</p>)
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
             )}
+
             {activeTab === "analytics" && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 transition-colors duration-500">
                 {/* Follower Growth */}
