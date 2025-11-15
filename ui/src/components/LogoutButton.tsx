@@ -17,10 +17,9 @@ export default function LogoutButton() {
 
       setShowToast(true);
 
-      // In frontend logout button:
+
       setTimeout(() => {
-        // window.location.href = "http://localhost:5173/";
-        window.location.href = "https://tweetboard.vercel.app"; // not auth/twitter directly
+        window.location.href = "https://tweetboard.vercel.app";
       }, 1500);
     } catch (err) {
       console.error("Logout failed:", err);

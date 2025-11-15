@@ -37,7 +37,7 @@ export default function App() {
 
   const { theme, setTheme } = useTheme();
 
-  // Settings state
+
   const [customMessage, setCustomMessage] = useState(
     "🎉 Thank you for your support!"
   );
@@ -76,12 +76,11 @@ export default function App() {
       console.log("Connected to socket:", socket.id);
     });
 
-    // Listen for new log entries
+
     socket.on(`log-update-${userId}`, (newLog: string) => {
       setLogs((prev) => [newLog, ...prev]);
     });
 
-    // Listen for live follower updates
     socket.on(`follower-update-${userId}`, (newCount: number) => {
       console.log(`📈 Received follower update: ${newCount}`);
       setFollowers(newCount);
@@ -96,14 +95,14 @@ export default function App() {
     };
   }, [userId]);
 
-  // Generate mock analytics when followers are fetched
-  useEffect(() => {
-    if (followers == null) return; // 🧩 Prevent null follower errors
 
-    // 📊 Simulate last 6 weeks (7-day intervals)
+  useEffect(() => {
+    if (followers == null) return;
+
+
     const today = new Date();
     const history = [];
-    let baseFollowers = followers * 0.5; // start 6 weeks ago at 50%
+    let baseFollowers = followers * 0.5;
 
     for (let i = 6; i >= 0; i--) {
       const date = new Date(today);
@@ -113,7 +112,7 @@ export default function App() {
         day: "numeric",
       });
 
-      // smooth growth simulation
+
       const followerCount = Math.round(
         baseFollowers + (followers - baseFollowers) * (1 - i / 6)
       );
@@ -123,30 +122,30 @@ export default function App() {
 
     setFollowerData(history);
 
-    // 🎯 Milestone data
+
     const presetMilestones = Array.from(
       { length: 100 },
       (_, i) => (i + 1) * 100
     );
     const milestones: { milestone: string; count: number }[] = [];
 
-    // Add all reached milestones
+
     presetMilestones.forEach((m) => {
       if (followers >= m) {
         milestones.push({ milestone: m.toString(), count: m });
       }
     });
 
-    // Add next milestone progress
+
     const nextMilestone = presetMilestones.find((m) => m > followers);
     if (nextMilestone) {
       milestones.push({
         milestone: nextMilestone.toString(),
-        count: followers, // partial progress
+        count: followers,
       });
     }
 
-    // Fallback for very new users
+
     if (milestones.length === 0) {
       milestones.push({ milestone: "", count: followers });
     }
@@ -169,7 +168,7 @@ export default function App() {
             );
             if (cachedUsername) setUsername(cachedUsername);
             if (cachedImage) setProfileImageUrl(cachedImage);
-            return null; // stop further processing
+            return null;
           }
 
           const data = await res.json();
@@ -233,7 +232,6 @@ export default function App() {
         ...prev,
       ]);
 
-      // Optionally update UI values
       if (data.followers) setFollowers(data.followers);
       if (data.milestone) setMilestone(data.milestone);
     } catch (err) {
@@ -267,7 +265,7 @@ export default function App() {
     await runBot();
 
     if (userId) {
-      // ⏳ Refetch latest username, followers, and profile image
+
       await fetchUserData(userId);
     }
   };
@@ -276,7 +274,7 @@ export default function App() {
       `💬 Custom message updated: "${customMessage}"`,
       ...prev,
     ]);
-    // POST to /api/config/:userId/message
+
   };
 
   const uploadGif = async () => {
@@ -316,7 +314,6 @@ export default function App() {
       const objectUrl = URL.createObjectURL(file);
       setPreview(objectUrl);
 
-      // cleanup old preview when replaced
       return () => URL.revokeObjectURL(objectUrl);
     } else {
       alert("Please upload a GIF file only!");
@@ -396,7 +393,7 @@ export default function App() {
       if (stored) setUserId(stored);
     }
 
-    // ✅ Followers
+
     if (followersFromAuth) {
       localStorage.setItem("tweetboard_followers", followersFromAuth);
       setFollowers(Number(followersFromAuth));
@@ -406,7 +403,7 @@ export default function App() {
     }
   }, []);
 
-  // ✅ Always sync followers to localStorage
+
   useEffect(() => {
     if (followers !== null) {
       localStorage.setItem("tweetboard_followers", followers.toString());
@@ -454,13 +451,12 @@ export default function App() {
         animate={variants[theme].animate}
         exit={variants[theme].exit}
         transition={{ duration: 0.4, ease: "easeInOut" }}
-        className={`min-h-screen transition-colors duration-500 ${
-          theme === "default"
+        className={`min-h-screen transition-colors duration-500 ${theme === "default"
             ? "bg-white text-black"
             : theme === "dim"
-            ? "bg-[#15202B] text-gray-100"
-            : "bg-black text-gray-100"
-        }`}
+              ? "bg-[#15202B] text-gray-100"
+              : "bg-black text-gray-100"
+          }`}
       >
         <Toast
           message={toast.message}
@@ -480,11 +476,9 @@ export default function App() {
 
           {/* Sidebar */}
           <aside
-            className={`fixed md:static z-20 top-0 left-0 min-h-screen p-6 w-64 transform ${
-              sidebarOpen ? "translate-x-0" : "-translate-x-full"
-            } transition-all duration-500 ease-in-out md:translate-x-0 flex flex-col justify-between ${
-              currentColors.bg
-            }`}
+            className={`fixed md:static z-20 top-0 left-0 min-h-screen p-6 w-64 transform ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
+              } transition-all duration-500 ease-in-out md:translate-x-0 flex flex-col justify-between ${currentColors.bg
+              }`}
           >
             <div>
               <h1 className="text-2xl font-bold mb-10 hidden md:block">
@@ -521,11 +515,10 @@ export default function App() {
                       setActiveTab(tab);
                       setSidebarOpen(false);
                     }}
-                    className={`flex items-center gap-3 w-full text-left p-2 rounded-xl transition-colors duration-200 ${
-                      activeTab === tab
+                    className={`flex items-center gap-3 w-full text-left p-2 rounded-xl transition-colors duration-200 ${activeTab === tab
                         ? currentColors.active
                         : currentColors.hover
-                    }`}
+                      }`}
                   >
                     <Icon size={18} /> <span>{label}</span>
                   </button>
@@ -582,9 +575,8 @@ export default function App() {
                       👋
                     </h2>
                     <p
-                      className={`text-sm ${
-                        theme === "default" ? "text-gray-500" : "text-slate-400"
-                      }`}
+                      className={`text-sm ${theme === "default" ? "text-gray-500" : "text-slate-400"
+                        }`}
                     >
                       Glad to have you back!
                     </p>
@@ -595,13 +587,12 @@ export default function App() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Follower Count */}
                   <div
-                    className={`rounded-2xl p-6 transition-colors duration-500 ${
-                      theme === "default"
+                    className={`rounded-2xl p-6 transition-colors duration-500 ${theme === "default"
                         ? "bg-gray-100 text-gray-900"
                         : theme === "dim"
-                        ? "bg-gray-800 text-gray-100"
-                        : "bg-white/10 text-gray-200"
-                    }`}
+                          ? "bg-gray-800 text-gray-100"
+                          : "bg-white/10 text-gray-200"
+                      }`}
                   >
                     <h2 className="text-lg font-semibold">Follower Count</h2>
                     <p className="text-3xl font-bold mt-2">
@@ -611,13 +602,12 @@ export default function App() {
 
                   {/* Last Milestone */}
                   <div
-                    className={`rounded-2xl p-6 transition-colors duration-500 ${
-                      theme === "default"
+                    className={`rounded-2xl p-6 transition-colors duration-500 ${theme === "default"
                         ? "bg-gray-100 text-gray-900"
                         : theme === "dim"
-                        ? "bg-gray-800 text-gray-100"
-                        : "bg-white/10 text-gray-200"
-                    }`}
+                          ? "bg-gray-800 text-gray-100"
+                          : "bg-white/10 text-gray-200"
+                      }`}
                   >
                     <h2 className="text-lg font-semibold">Last Milestone</h2>
                     <p className="text-3xl font-bold mt-2">{milestone}</p>
@@ -627,21 +617,19 @@ export default function App() {
                   <div className="md:col-span-2">
                     <h2 className="text-lg font-semibold mb-3">Activity Log</h2>
                     <div
-                      className={`rounded-lg p-4 text-sm h-60 overflow-y-auto space-y-2 flex flex-col transition-colors duration-500 ${
-                        theme === "default"
+                      className={`rounded-lg p-4 text-sm h-60 overflow-y-auto space-y-2 flex flex-col transition-colors duration-500 ${theme === "default"
                           ? "bg-gray-100 text-gray-900"
                           : theme === "dim"
-                          ? "bg-gray-800 text-gray-100"
-                          : "bg-white/10 text-gray-300"
-                      }`}
+                            ? "bg-gray-800 text-gray-100"
+                            : "bg-white/10 text-gray-300"
+                        }`}
                     >
                       {logs.length === 0 ? (
                         <p
-                          className={`text-center mt-20 ${
-                            theme === "default"
+                          className={`text-center mt-20 ${theme === "default"
                               ? "text-gray-500"
                               : "text-slate-400"
-                          }`}
+                            }`}
                         >
                           No activity log yet
                         </p>
@@ -658,13 +646,12 @@ export default function App() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 transition-colors duration-500">
                 {/* Follower Growth */}
                 <div
-                  className={`rounded-xl p-6 transition-colors duration-500 ${
-                    theme === "default"
+                  className={`rounded-xl p-6 transition-colors duration-500 ${theme === "default"
                       ? "bg-gray-100 text-gray-900"
                       : theme === "dim"
-                      ? "bg-white/10 text-gray-100"
-                      : "bg-white/10 text-gray-200"
-                  }`}
+                        ? "bg-white/10 text-gray-100"
+                        : "bg-white/10 text-gray-200"
+                    }`}
                 >
                   <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                     Follower Growth 📈
@@ -688,8 +675,8 @@ export default function App() {
                               theme === "default"
                                 ? "#f9f9f9"
                                 : theme === "dim"
-                                ? "#1e293b"
-                                : "#0f172a",
+                                  ? "#1e293b"
+                                  : "#0f172a",
                             border: "none",
                             color: theme === "default" ? "#000" : "#fff",
                           }}
@@ -711,13 +698,12 @@ export default function App() {
 
                 {/* Milestones Hit */}
                 <div
-                  className={`rounded-xl p-6 transition-colors duration-500 ${
-                    theme === "default"
+                  className={`rounded-xl p-6 transition-colors duration-500 ${theme === "default"
                       ? "bg-gray-100 text-gray-900"
                       : theme === "dim"
-                      ? "bg-white/10 text-gray-100"
-                      : "bg-white/10 text-gray-200"
-                  }`}
+                        ? "bg-white/10 text-gray-100"
+                        : "bg-white/10 text-gray-200"
+                    }`}
                 >
                   <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                     Milestones Hit 🎯
@@ -741,8 +727,8 @@ export default function App() {
                               theme === "default"
                                 ? "#f9f9f9"
                                 : theme === "dim"
-                                ? "#1e293b"
-                                : "#0f172a",
+                                  ? "#1e293b"
+                                  : "#0f172a",
                             border: "none",
                           }}
                           itemStyle={{
