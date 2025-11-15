@@ -1,5 +1,5 @@
 const fetch = require("node-fetch");
-require("dotenv").config(); // so it loads .env
+require("dotenv").config();
 
 (async () => {
   try {

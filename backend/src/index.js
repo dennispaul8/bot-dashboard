@@ -1,7 +1,7 @@
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
-const app = require("./app"); // your existing express app
+const app = require("./app");
 
 const server = http.createServer(app);
 
@@ -13,14 +13,13 @@ const io = new Server(server, {
   },
 });
 
-global.io = io; // ✅ make io globally accessible
+global.io = io;
 
 io.on("connection", (socket) => {
   console.log("🟢 Socket connected:", socket.id);
   socket.on("disconnect", () => console.log("Client disconnected"));
 });
 
-// Example: emit a log update when addLog is called
 const { addLog: originalAddLog } = require("./models/Logs");
 const addLog = (userId, message, followerCount = null) => {
   originalAddLog(userId, message);

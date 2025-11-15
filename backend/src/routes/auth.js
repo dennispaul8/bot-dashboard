@@ -1,4 +1,3 @@
-// backend/src/routes/auth.js
 const express = require("express");
 const passport = require("passport");
 const TwitterStrategy = require("passport-twitter").Strategy;
@@ -32,7 +31,7 @@ passport.use(
           accessSecret: tokenSecret,
           message: existing?.message || "🎉 Thank you for your support!",
           gifPath: existing?.gifPath || "",
-          lastMilestone: existing?.lastMilestone || 0, // ✅ preserve milestone
+          lastMilestone: existing?.lastMilestone || 0,
         });
 
         return done(null, saved);
@@ -70,7 +69,6 @@ router.get(
       const username = req.user.username;
       const profileImageUrl = req.user.photos?.[0]?.value || "";
 
-      // 🔹 Fetch followers count from Twitter API v2
       const response = await fetch(
         `https://api.twitter.com/2/users/by/username/${username}?user.fields=public_metrics`,
         {
@@ -88,7 +86,6 @@ router.get(
         console.warn("⚠️ Could not fetch followers:", response.status);
       }
 
-      // ✅ Build frontend redirect URL
       const redirectUrl = `${
         process.env.FRONTEND_URL
       }?userId=${encodeURIComponent(userId)}&username=${encodeURIComponent(

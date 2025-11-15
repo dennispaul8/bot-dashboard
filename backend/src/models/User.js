@@ -1,9 +1,7 @@
-// backend/src/models/User.js
 const fs = require("fs");
 const path = require("path");
 const DATA_FILE = path.join(__dirname, "..", "..", "data", "users.json");
 
-// ensure data folder exists
 const DATA_DIR = path.dirname(DATA_FILE);
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 

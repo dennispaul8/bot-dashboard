@@ -1,8 +1,8 @@
-// backend/src/cron/followerCheck.js
+
 const cron = require("node-cron");
 const fetch = require("node-fetch");
 const https = require("https");
-const agent = new https.Agent({ keepAlive: true, secureOptions: 0x4 }); // allow TLS fallback
+const agent = new https.Agent({ keepAlive: true, secureOptions: 0x4 });
 const { addLog } = require("../models/Logs");
 const { getUser, createOrUpdateUser } = require("../models/User");
 const { postMilestoneTweet } = require("../routes/milestone");
@@ -48,10 +48,9 @@ cron.schedule("*/15 * * * *", async () => {
               "⚠️ Unable to fetch your Twitter data right now. Please try again shortly.";
         }
 
-        // Log a user-friendly message
+        
         addLog(userId, friendlyMsg);
 
-        // Also log technical detail privately for debugging
         console.error(`Twitter API error for ${userId}: ${res.status}`);
         continue;
       }
@@ -60,7 +59,6 @@ cron.schedule("*/15 * * * *", async () => {
       const followers = data.data.public_metrics.followers_count;
       const milestone = Math.floor(followers / 100) * 100;
 
-      // ✅ Always get a valid user object (fallback)
       let user = getUser(userId);
       if (!user) {
         user = { id: userId, username: userId, displayName: userId };
@@ -68,12 +66,11 @@ cron.schedule("*/15 * * * *", async () => {
       }
 
       const message = user.message || "🎉 Just hit another milestone!";
-      const gifPath = user.gifPath || ""; // ✅ include gifPath
+      const gifPath = user.gifPath || "";
       const lastMilestone = user.lastMilestone || 0;
 
       addLog(userId, `✅ Auto check: ${followers} followers`);
 
-      // 🎯 Only tweet new milestones
       if (milestone > (user.lastMilestone ?? 0)) {
         addLog(
           userId,
@@ -82,7 +79,6 @@ cron.schedule("*/15 * * * *", async () => {
           }...`
         );
 
-        // ✅ Pass user with gifPath and message to the tweet function
         await postMilestoneTweet({ ...user, message, gifPath }, milestone);
 
         createOrUpdateUser(userId, { lastMilestone: milestone });
@@ -96,7 +92,6 @@ cron.schedule("*/15 * * * *", async () => {
         }
       }
 
-      // Live update for every check
       if (global.io) {
         global.io.emit(
           `log-update-${userId}`,

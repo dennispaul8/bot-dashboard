@@ -1,4 +1,3 @@
-// backend/src/jobs/milestoneJob.js
 const fs = require("fs");
 const path = require("path");
 const { createUserClient } = require("../utils/twitterClient");
@@ -6,8 +5,8 @@ const { getUser, createOrUpdateUser, listUsers } = require("../models/User");
 const { UPLOAD_DIR } = require("../utils/storage");
 const CronJob = require("cron").CronJob;
 
-// store last logs in-memory (simple)
-const lastRunLogs = {}; // { userId: [messages...] }
+
+const lastRunLogs = {}; 
 
 function pushLog(userId, msg) {
   lastRunLogs[userId] = lastRunLogs[userId] || [];
@@ -15,7 +14,7 @@ function pushLog(userId, msg) {
   if (lastRunLogs[userId].length > 50) lastRunLogs[userId].pop();
 }
 
-// Run check for a single user
+
 async function runUserMilestoneCheck(userId) {
   const user = getUser(userId);
   if (!user) throw new Error("User not found");
@@ -25,7 +24,7 @@ async function runUserMilestoneCheck(userId) {
     return { ok: false, msg: "Missing tokens" };
   }
 
-  // build client
+ 
   const client = createUserClient({
     accessToken: user.accessToken,
     accessSecret: user.accessSecret,
@@ -34,7 +33,6 @@ async function runUserMilestoneCheck(userId) {
   });
 
   try {
-    // get the authenticated user id (ensure correct user)
     const me = await client.v2.me({ "user.fields": "public_metrics" });
     const followers = me.data.public_metrics.followers_count;
     const milestone = Math.floor(followers / 100) * 100;
@@ -48,9 +46,8 @@ async function runUserMilestoneCheck(userId) {
     if (
       milestone > 0 &&
       followers >= milestone &&
-      milestone > last // ✅ only celebrate forward progress
+      milestone > last 
     ) {
-      // choose gif
       const gifPath = user.gifPath
         ? path.join(process.cwd(), user.gifPath)
         : path.join(__dirname, "..", "..", "uploads", "celebration.gif");
@@ -71,7 +68,6 @@ async function runUserMilestoneCheck(userId) {
         media: mediaId ? { media_ids: [mediaId] } : undefined,
       });
 
-      // update lastMilestone
       createOrUpdateUser(userId, { lastMilestone: milestone });
       pushLog(userId, `Tweeted milestone ${milestone}`);
       return { ok: true, tweeted: true, milestone };
@@ -85,14 +81,11 @@ async function runUserMilestoneCheck(userId) {
   }
 }
 
-// Optional: run all users (for a scheduled cron)
 async function runAllUsersOnce() {
   const users = listUsers();
   for (const user of users) {
     try {
-      // only if user has tokens
       if (user.accessToken && user.accessSecret) {
-        // eslint-disable-next-line no-await-in-loop
         await runUserMilestoneCheck(user.id);
       }
     } catch (e) {
@@ -103,7 +96,6 @@ async function runAllUsersOnce() {
 }
 
 function startAllCron(cronExpr = "0 * * * *") {
-  // default: every hour at minute 0
   const job = new CronJob(cronExpr, async () => {
     console.log("Running scheduled milestone checks for all users...");
     await runAllUsersOnce();

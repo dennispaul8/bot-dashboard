@@ -4,10 +4,8 @@ const fetch = require("node-fetch");
 
 const router = express.Router();
 
-// cache duration (ms) → 5 minutes
 const CACHE_DURATION = 5 * 60 * 1000;
 
-// GET /api/user/:id → return latest Twitter data
 router.get("/:id", async (req, res) => {
   try {
     const user = getUser(req.params.id);
@@ -21,14 +19,12 @@ router.get("/:id", async (req, res) => {
       return res.status(500).json({ error: "Server not configured properly" });
     }
 
-    // ✅ If cache is fresh, return it
     const now = Date.now();
     if (user.lastFetched && now - user.lastFetched < CACHE_DURATION) {
       console.log("✅ Returning cached user:", user.username);
       return res.json(user);
     }
 
-    // Otherwise, fetch fresh data
     const url = `https://api.twitter.com/2/users/${user.twitterId}?user.fields=public_metrics,profile_image_url`;
     console.log("➡️ Fetching from Twitter:", url);
 
@@ -50,7 +46,6 @@ router.get("/:id", async (req, res) => {
         .json({ error: "Failed to fetch user from Twitter" });
     }
 
-    // Build updated user object
     const updatedUser = {
       id: user.id,
       twitterId: user.twitterId,
@@ -59,10 +54,9 @@ router.get("/:id", async (req, res) => {
       followers: data.data.public_metrics.followers_count,
       following: data.data.public_metrics.following_count,
       profile_image_url: data.data.profile_image_url,
-      lastFetched: now, // ✅ store timestamp
+      lastFetched: now, 
     };
 
-    // Save updated user to users.json
     createOrUpdateUser(user.id, updatedUser);
 
     return res.json(updatedUser);

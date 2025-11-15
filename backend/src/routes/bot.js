@@ -1,4 +1,3 @@
-// backend/src/routes/bot.js
 console.log(
   "🔐 Bearer Token:",
   process.env.BEARER_TOKEN ? "✅ Loaded" : "❌ Missing"
@@ -9,7 +8,6 @@ const fetch = require("node-fetch");
 const router = express.Router();
 const { addLog, getLogs } = require("../models/Logs");
 
-// POST /api/bot/check/:userId — check follower milestone
 router.post("/check/:userId", async (req, res) => {
   console.log("🟢 /api/bot/check hit with:", req.params.userId);
   const { userId } = req.params;
@@ -55,10 +53,8 @@ router.post("/check/:userId", async (req, res) => {
             "⚠️ Unable to fetch your Twitter data right now. Please try again later.";
       }
 
-      // Log user-friendly message for the UI
       addLog(userId, friendlyMsg);
 
-      // Log full details for developer debugging
       const errorText = await response.text();
       console.error(`Twitter API error (${response.status}):`, errorText);
 
@@ -85,7 +81,6 @@ router.post("/check/:userId", async (req, res) => {
   }
 });
 
-// 🪵 Add this route back — to show logs in frontend
 router.get("/logs/:userId", (req, res) => {
   const { userId } = req.params;
   console.log("📜 Fetching logs for:", userId);

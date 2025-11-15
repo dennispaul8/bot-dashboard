@@ -1,4 +1,3 @@
-// backend/src/routes/milestone.js
 const express = require("express");
 const path = require("path");
 const fs = require("fs");
@@ -9,13 +8,11 @@ const { addLog } = require("../models/Logs");
 
 const router = express.Router();
 
-// ✅ App-level Twitter client (for fallback/non-user tasks)
 const appClient = new TwitterApi({
   appKey: process.env.API_KEY,
   appSecret: process.env.API_SECRET,
 });
 
-// ✅ POST: update custom message
 router.post("/:userId/message", (req, res) => {
   const { message } = req.body;
   if (typeof message !== "string")
@@ -25,7 +22,6 @@ router.post("/:userId/message", (req, res) => {
   res.json({ success: true, message: "Saved", user });
 });
 
-// ✅ POST: upload GIF
 router.post("/:userId/gif", upload.single("gif"), (req, res) => {
   if (!req.file) return res.status(400).json({ error: "No file uploaded" });
 
@@ -40,7 +36,6 @@ router.post("/:userId/gif", upload.single("gif"), (req, res) => {
   res.json({ success: true, path: publicPath, user });
 });
 
-// ✅ GET: user config
 router.get("/:userId", (req, res) => {
   const user = getUser(req.params.userId);
   if (!user) return res.status(404).json({ error: "User not found" });
@@ -55,13 +50,11 @@ router.get("/:userId", (req, res) => {
   });
 });
 
-// 🧠 Helper: upload a local GIF file to Twitter
 async function uploadGif(user, localPath) {
   const absPath = path.resolve(localPath);
   if (!fs.existsSync(absPath))
     throw new Error(`GIF file not found at ${absPath}`);
 
-  // Create a per-user client
   const userClient = new TwitterApi({
     appKey: process.env.API_KEY,
     appSecret: process.env.API_SECRET,
@@ -72,13 +65,11 @@ async function uploadGif(user, localPath) {
   return await userClient.v1.uploadMedia(absPath, { mimeType: "image/gif" });
 }
 
-// 🚀 Post milestone tweet (per user)
 async function postMilestoneTweet(user, milestone) {
   try {
     const message = user.message || `🎉 Just hit ${milestone} followers!`;
     let mediaId;
 
-    // Create user-level client
     const twitterClient = new TwitterApi({
       appKey: process.env.API_KEY,
       appSecret: process.env.API_SECRET,

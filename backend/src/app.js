@@ -16,26 +16,22 @@ const { startAllCron } = require("./jobs/milestoneJob");
 
 const app = express();
 
-// 🔹 Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// 🔹 CORS (make sure credentials are allowed)
 app.use(
   cors({
     origin: [
       process.env.FRONTEND_URL,
       "http://localhost:5173",
-      "https://tweetboard.onrender.com", // optional
+      "https://tweetboard.onrender.com", 
     ],
     credentials: true,
   })
 );
 
-// 🔹 Trust Render proxy
 app.set("trust proxy", 1);
 
-// 🔹 Session configuration
 app.use(
   session({
     secret: process.env.SESSION_SECRET,
@@ -43,36 +39,35 @@ app.use(
     saveUninitialized: false,
     store: MongoStore.create({
       mongoUrl: process.env.MONGO_URI,
-      ttl: 14 * 24 * 60 * 60, // 14 days
+      ttl: 14 * 24 * 60 * 60, 
     }),
     cookie: {
-      secure: process.env.NODE_ENV === "production", // only https in prod
+      secure: process.env.NODE_ENV === "production",
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       httpOnly: true,
-      maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+      maxAge: 1000 * 60 * 60 * 24 * 7, 
     },
   })
 );
 
-// 🔹 Passport initialization (AFTER session)
+
 app.use(passport.initialize());
 app.use(passport.session());
 
-// 🔹 Routes
+
 app.use("/auth", authRoutes);
 app.use("/api/bot", botRoutes);
 app.use("/api/milestone", milestoneRoutes);
 app.use("/api/user", userRoutes);
 
-// 🔹 Static uploads
+
 app.use("/uploads", express.static(path.join(__dirname, "..", "uploads")));
 
-// 🔹 Health check
 app.get("/", (req, res) => {
   res.send("✅ Twitter Milestone Bot Backend running");
 });
 
-// 🔹 Start global cron (optional)
+
 if (process.env.ENABLE_CRON === "true") {
   const cronExpr = process.env.CRON_EXPRESSION || "0 * * * *";
   startAllCron(cronExpr);
